@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Button Example</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+
+
+</head>
+<body class="index" style="overflow-y: hidden">
+
+<form style="width: 500px; margin: 100px auto" method="post" action="/">
+
+    <div class="mb-3">
+        <label for="username" class="form-label">Email address</label>
+        <input type="email" class="form-control" id="username" aria-describedby="emailHelp" name="username">
+        <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password">
+    </div>
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="exampleCheck1">
+        <label class="form-check-label" for="exampleCheck1">Check me out</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+</body>
+</html>
