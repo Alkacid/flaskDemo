@@ -1,3 +1,6 @@
+import hashlib
+import os
+
 import mysql.connector
 from flask import Flask, render_template, request, redirect
 
@@ -8,9 +11,38 @@ config = {
     'database': 'lab1',
     'raise_on_warnings': True
 }
+usersql = {
+    'user': 'root',
+    'password': '+654',
+    'host': 'localhost',
+    'database': 'edu_manage',
+    'raise_on_warnings': True
+}
 
 cnx = mysql.connector.connect(**config)
 app = Flask(__name__)
+
+
+@app.route('/register', methods=['POST', 'GET'])
+def register():
+    if request.method == 'POST':
+
+        userdata = mysql.connector.connect(**usersql)
+        username = request.form['username']
+        password = request.form['password']
+
+        # 生成唯一的 salt 值
+        salt = os.urandom(16).hex()
+        hashed_password = hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+        cursor = userdata.cursor()
+        cursor.execute(
+            "INSERT INTO user (username, password, salt) VALUES ( '%s', '%s', '%s');" % (username, hashed_password,
+                                                                                         salt))
+        userdata.commit()
+        cursor.close()
+        return redirect('/')
+    else:
+        return render_template('register.html')
 
 
 # 在 Web 应用程序中呈现数据
@@ -73,11 +105,24 @@ def home():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        if password == 'qwer' or True:
-            return redirect('/table')
+        userdata = mysql.connector.connect(**usersql)
+        cursor = userdata.cursor()
+        cursor.execute("SELECT * FROM user WHERE username= '%s'" % username)
+        user = cursor.fetchone()
 
-    else:
-        return render_template('home.html')
+        print(user)
+        if user:
+            columns = [desc[0] for desc in cursor.description]
+            # 将查询结果转换为字典类型
+            user = dict(zip(columns, user))
+            salt = user['salt']
+            hashed_password = hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+            if hashed_password == user['password']:
+                return redirect('/table')
+
+        return render_template('login.html', error_msg='登录失败，请检查用户名和密码是否正确')
+
+    return render_template('login.html')
 
 
 @app.route('/contact', )
