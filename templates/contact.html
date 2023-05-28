@@ -2,9 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <style>
+        .nav-pills .nav-link {
+            margin-bottom: 5px; /* 元素之间的水平间距 */
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #007bff;
+        }
+
+        .nav-pills .nav-link:not(.active):hover {
+            background-color: #6d7277;
+            color: #ffffff; /* 更改字体颜色为黑色 */
+        }
+
+    </style>
     <title>login ok</title>
 </head>
 <body>
-<h1>heihei hello</h1>
+<div style="display: flex; flex-direction: row;">
+    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 200px; height: 100vh">
+        <ul class="nav nav-pills flex-column mb-auto">
+            <div class="align-items-center  d-flex">
+                <span class="fs-4">欢迎</span>
+            </div>
+            <hr>
+            <li class="nav-item">
+                <a href="#" class="nav-link active" aria-current="page">
+                    Home
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link " aria-current="page">
+                    manage
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <h1>heihei hello</h1>
+    <h2>odijfiadsfa
+    </h2>
+</div>
 </body>
 </html>

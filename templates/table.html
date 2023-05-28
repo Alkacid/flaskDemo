@@ -3,44 +3,274 @@
 <head>
     <title>MySQL Table</title>
     <meta charset="UTF-8">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="/static/css/bootstrap.css">
     <style>
+        .nav-pills .nav-link {
+            margin-bottom: 5px; /* 元素之间的水平间距 */
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #007bff;
+        }
+
+        .nav-pills .nav-link:not(.active):hover {
+            background-color: #6d7277;
+            color: #ffffff; /* 更改字体颜色为黑色 */
+        }
+
         .row {
             display: flex;
             justify-content: center;
         }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: inherit;
+            height: 100%;
+        }
+
     </style>
 </head>
 <body>
-{#过滤器组件：form#}
-<div class="container mt-3">
-    <form action="/table/sort" method="post" id="sort" style="margin:0 auto">
-        <div class="row">
-            <div class="col-md-2">
-                <select name="sortby" id="sortby" class="form-select" aria-label="Default select example">
-                    <option selected value="default">默认排序</option>
-                    {% for column in header %}
-                        <option value="{{ column }}">{{ column }}</option>
+
+<div class="row">
+    <div class="" style="width: 15%">
+        <nav class="navbar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark">
+            <ul class="nav nav-pills flex-column  mb-auto">
+                <div class="align-items-center  d-flex ">
+                    <span class="fs-4">学生管理系统</span>
+                </div>
+                <hr>
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" aria-current="page">
+                        学生信息管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link " aria-current="page">
+                        成绩管理
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="" style="width: 85%">
+        <div class="container "
+             style=" display: flex; justify-content: center; flex-direction: column; margin-right: auto">
+            <div class=" container mt-3">
+                <form action="/table/sort" method="post" id="sortForm" style="margin:0 auto">
+                    <div class="row">
+
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
+                                data-bs-target="#myModal" style="width: fit-content">
+                            详细检索
+                        </button>
+
+                        <div class="input-group" style="width: fit-content">
+                            <span class="input-group-text">name</span>
+                            <input type="text" class="form-control" id="name" name="name">
+                        </div>
+                        <div class="input-group" style="width: fit-content">
+                            <span class="input-group-text">author</span>
+                            <input type="text" class="form-control" id="author" name="author">
+                        </div>
+                        <div style="width: fit-content">
+                            <select name="sortItem" id="sortItem" class="form-select"
+                                    aria-label="Default select example">
+                                <option selected value="default">默认排序</option>
+                                {% for column in header %}
+                                    <option value="{{ column }}">{{ column }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div style="width: fit-content">
+                            <select name="sortDirect" id="sortDirect" class="form-select">
+                                <option value="ASC">正序</option>
+                                <option value="DESC">逆序</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary">查询</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {#数据表：body分离#}
+            <div class="container mt-3" style="" id="table-container">
+                <table class="table table-striped table-bordered table-hover"
+                       style="width: 80%; table-layout: auto; margin: auto auto" id="table">
+                    <thead>
+                    <tr>
+                        {% for column in header %}
+                            <th data-sort-order="asc"> {{ column.strip() }}</th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    {% for row in data %}
+                        <tr>
+                            {% for column in row %}
+                                <td>{{ column }}</td>
+                            {% endfor %}
+                        </tr>
                     {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-1">
-                <select name="direct" id="direct" class="form-select">
-                    <option value="ASC">正序</option>
-                    <option value="DESC">逆序</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary">查询</button>
+                    </tbody>
+                </table>
             </div>
         </div>
-    </form>
+    </div>
 </div>
+
+<!-- 模态框 -->
+<form action="#" method="post" id="sortDetailForm">
+    <div class="modal" id="myModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <!-- 模态框头部 -->
+                <div class="modal-header">
+                    <h4 class="modal-title">详细检索信息</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- 模态框内容 -->
+                <div class="modal-body">
+
+                    {% for column, type in zip( header,colType) %}
+                        <div class="input-group" style="width:100%; margin-bottom: 5px">
+                            <span class="input-group-text">{{ column }}</span>
+                            {% if type[0] %} <!-- 整数 -->
+                                <input type="number" class="form-control" id="{{ column }}DtailLow" title="请输入整数"
+                                       name="{{ column }}Lower">
+                                <input type="number" class="form-control" id="{{ column }}DtailUpper" title="请输入整数"
+                                       name="{{ column }}Upper">
+                            {% elif type[1] %}
+                                <input type="text" pattern="\d+(\.\d+)?" class="form-control" title="请输入浮点数或整数"
+                                       id="{{ column }}DtailLower" name="{{ column }}Lower">
+                                <input type="text" pattern="\d+(\.\d+)?" class="form-control" title="请输入浮点数或整数"
+                                       id="{{ column }}DtailUpper" name="{{ column }}Upper">
+                            {% elif type[2] %}
+                                <input type="date" class="form-control" id="{{ column }}DtailLower"
+                                       name="{{ column }}Lower">
+                                <input type="date" class="form-control" id="{{ column }}DtailUpper"
+                                       name="{{ column }}Upper">
+                            {% else %}
+                                <input type="text" class="form-control" id="{{ column }}Dtail" name={{ column }}>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <div class="d-flex justify-content-between">
+                        <div class=" d-flex justify-content-start">
+                            <div style="width: fit-content">
+                                <select name="sortItem" id="sortItemDetail" class="form-select"
+                                        aria-label="Default select example">
+                                    <option selected value="default">默认排序</option>
+                                    {% for column in header %}
+                                        <option value="{{ column }}">{{ column }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div style="width: auto">
+                                <select name="sortDirect" id="sortDirectDetail" class="form-select">
+                                    <option value="ASC">正序</option>
+                                    <option value="DESC">逆序</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class=" d-flex justify-content-end">
+                            <button type="button" id="reset-btn" class="btn btn-outline-primary">重置筛选条件</button>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">查询</button>
+                        <button type="button" class="btn btn-danger" style="margin-left: 5px" data-bs-dismiss="modal">
+                            关闭
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    // 获取表单和重置按钮
+    const myForm = document.getElementById('sortDetailForm');
+    const resetBtn = document.getElementById('reset-btn');
+
+    // 为重置按钮添加点击事件
+    resetBtn.addEventListener('click', () => {
+        // 获取表单中的所有输入框
+        const inputs = myForm.querySelectorAll('input');
+
+        // 将所有输入框的value设置为空字符串
+        inputs.forEach(input => input.value = '');
+    });
+
+</script>
+<script>
+    const formDetail = document.querySelector('#sortDetailForm')
+
+    const tableContainer = document.querySelector('#table-container');
+
+    // 监听表单提交事件
+    formDetail.addEventListener('submit', e => {
+
+        e.preventDefault();
+
+        // 获取表单数据
+        const formDataDetail = new FormData(formDetail);
+
+        // 发送 AJAX 请求或 Fetch 请求
+        fetch('/get-table-data', {
+            method: 'POST',
+            body: formDataDetail
+        })
+            .then(response => response.text())
+            .then(data => {
+                // 将返回的数据插入表格容器中
+                tableContainer.innerHTML = data;
+            })
+            .catch(error => console.error(error));
+    });
+</script>
+<script>
+    // 获取表单和表格容器
+    const form = document.querySelector('#sortForm');
+    {#const tableContainer = document.querySelector('#table-container');#}
+
+    // 监听表单提交事件
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+
+        // 获取表单数据
+        const formData = new FormData(form);
+
+        // 发送 AJAX 请求或 Fetch 请求
+        fetch('/get-table-data', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.text())
+            .then(data => {
+                // 将返回的数据插入表格容器中
+                tableContainer.innerHTML = data;
+            })
+            .catch(error => console.error(error));
+    });
+
+</script>
+
 
 {#弃用代码：#}
 <script>
-    var selectEl = document.getElementById('sortby');
+    var selectEl = document.getElementById('sortItem');
     // 设置选项选中状态发生变化时的事件处理器
     selectEl.addEventListener('change', function () {
         // 将所选的选项值存储在localStorage中
@@ -57,63 +287,44 @@
     });
 </script>
 {#弃用代码^#}
-<script>
-    // JavaScript代码
-    document.getElementById('sort').addEventListener('submit', function (event) {
-        // 阻止表单默认的提交行为
-        event.preventDefault();
 
-        // 获取表单数据
-        var sortbyValue = document.getElementById('sortby').value;
-        var directValue = document.getElementById('direct').value;
-        // 使用Fetch API向服务器发送数据
-        // 假设服务器端有一个接受参数的路由: /get-table-data?search=...
-        fetch(`/get-table-data?sortby=${encodeURIComponent(sortbyValue)}&direct=${encodeURIComponent(directValue)}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then(response => response.json())  // 将响应内容解析为JSON格式
-            .then(data => {
-                // 解析新数据，并将其插入到表格中
-                var table = document.getElementById('tableBody');
-                table.innerHTML = '';  // 清空表格中的所有行
+{#<script>#}
+{#    // JavaScript代码#}
+{#    document.getElementById('sortForm').addEventListener('submit', function (event) {#}
+{#        // 阻止表单默认的提交行为#}
+{#        event.preventDefault();#}
+{##}
+{#        // 获取表单数据#}
+{#        var sortItemValue = document.getElementById('sortItem').value;#}
+{#        var sortDirectValue = document.getElementById('sortDirect').value;#}
+{#        // 使用Fetch API向服务器发送数据#}
+{#        // 假设服务器端有一个接受参数的路由: /get-table-data?search=...#}
+{#        fetch(`/get-table-data?sortItem=${encodeURIComponent(sortItemValue)}&sortDirect=${encodeURIComponent(sortDirectValue)}`, {#}
+{#            method: 'GET',#}
+{#            headers: {#}
+{#                'Content-Type': 'application/json'#}
+{#            }#}
+{#        }).then(response => response.json())  // 将响应内容解析为JSON格式#}
+{#            .then(data => {#}
+{#                // 解析新数据，并将其插入到表格中#}
+{#                var table = document.getElementById('tableBody');#}
+{#                table.innerHTML = '';  // 清空表格中的所有行#}
+{##}
+{#                data.forEach(rowData => {#}
+{#                    var row = table.insertRow();#}
+{#                    rowData.forEach(cellData => {#}
+{#                        var cell = row.insertCell();#}
+{#                        cell.textContent = cellData;#}
+{#                    });#}
+{#                });#}
+{#            })#}
+{#            .catch(error => {#}
+{#                console.error('请求新数据时出错：', error);#}
+{#            });#}
+{#    });#}
+{##}
+{#</script>#}
 
-                data.forEach(rowData => {
-                    var row = table.insertRow();
-                    rowData.forEach(cellData => {
-                        var cell = row.insertCell();
-                        cell.textContent = cellData;
-                    });
-                });
-            })
-            .catch(error => {
-                console.error('请求新数据时出错：', error);
-            });
-    });
-
-</script>
-
-{#数据表：body分离#}
-<div class="container mt-3">
-    <table class="table table-striped table-bordered" style="width: 600px; margin: auto auto" id="table">
-        <thead>
-        <tr>
-            {% for column in header %}
-                <th data-sort-order="asc"> {{ column.strip() }}</th>
-            {% endfor %}
-        </tr>
-        </thead>
-        <tbody id="tableBody">
-        {% for row in data %}
-            <tr>
-                {% for column in row %}
-                    <td>{{ column }}</td>
-                {% endfor %}
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js' ) }}"></script>
 </body>
 </html>
