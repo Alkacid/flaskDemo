@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/5.1.1/js/bootstrap.bundle.min.js"></script>
+    <script>
+        var a = {{ header|tojson|safe }};
+        console.log(a);
+    </script>
     <style>
         .nav-pills .nav-link {
             margin-bottom: 5px; /* 元素之间的水平间距 */
@@ -21,29 +26,83 @@
     <title>login ok</title>
 </head>
 <body>
-<div style="display: flex; flex-direction: row;">
-    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 200px; height: 100vh">
-        <ul class="nav nav-pills flex-column mb-auto">
-            <div class="align-items-center  d-flex">
-                <span class="fs-4">欢迎</span>
-            </div>
-            <hr>
-            <li class="nav-item">
-                <a href="#" class="nav-link active" aria-current="page">
-                    Home
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link " aria-current="page">
-                    manage
-                </a>
-            </li>
-        </ul>
-    </div>
+<div class="container mt-3">
+    <h3>模态框实例</h3>
+    <p>点击按钮打开模态框</p>
 
-    <h1>heihei hello</h1>
-    <h2>odijfiadsfa
-    </h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#myModal">
+        打开模态框
+    </button>
 </div>
+
+<!-- 模态框 -->
+<div class="modal" id="myModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- 模态框头部 -->
+            <div class="modal-header">
+                <h4 class="modal-title">模态框标题</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- 模态框内容 -->
+            <div class="modal-body">
+                {% for n in header %}
+                    <h1>{{ n }}</h1>
+                {% endfor %}
+                模态框内容..
+            </div>
+
+            <!-- 模态框底部 -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">关闭</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="container mt-3">
+    <h3>模态框实例</h3>
+    <p>点击按钮打开模态框</p>
+
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#myModal2">
+        打开模态框2
+    </button>
+</div>
+
+<!-- 模态框 -->
+<div class="modal" id="myModal2">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- 模态框头部 -->
+            <div class="modal-header">
+                <h4 class="modal-title">模态框标题</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- 模态框内容 -->
+            <div class="modal-body">
+                模态框内容..
+                {% for n in header %}
+                    <h1>{{ n }}</h1>
+                {% endfor %}
+            </div>
+
+            <!-- 模态框底部 -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">关闭</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js' ) }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.esm.min.js' ) }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js' ) }}"></script>
 </body>
 </html>

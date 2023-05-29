@@ -20,7 +20,7 @@ usersql = {
 }
 
 cnx = mysql.connector.connect(**config)
-Description = None
+Description = []
 app = Flask(__name__)
 
 
@@ -48,17 +48,18 @@ def register():
 
 # 在 Web 应用程序中呈现数据
 @app.route('/table')
-def index():
+def table():
     cursor = cnx.cursor()
-    cursor.execute("describe borrow")
+    cursor.execute("describe book")
     Description = cursor.fetchall()
+    print(Description)
     header = [col[0] for col in Description]
     isInt = ['int' in str(col[1]) for col in Description]
     isFloat = ['float' in str(col[1]) for col in Description]
     isDate = ['date' in str(col[1]) for col in Description]
     print(header)
-    colType = zip(isInt, isFloat, isDate)
-    query = "SELECT * FROM borrow"
+    colType = list(zip(isInt, isFloat, isDate))
+    query = "SELECT * FROM book"
     cursor.execute(query)
     data = cursor.fetchall()
     # print(data)
@@ -75,12 +76,13 @@ def sort_by():
         cursor = cnx.cursor()
         sortItem = request.form['sortItem']
         sortDirect = request.form['sortDirect']
-        cursor.execute("SELECT * FROM borrow ORDER BY " + sortItem + " " + sortDirect)
+        cursor.execute("SELECT * FROM book ORDER BY " + sortItem + " " + sortDirect)
         data = cursor.fetchall()
-        query = "describe borrow"
+        query = "describe book"
         cursor.execute(query)
         header = [col[0] for col in cursor.fetchall()]
-        return render_template('table.html', data=data, header=header)
+
+        return render_template('table.html', data=data, header=header, len=len(header))
 
 
 def create_html_table(header, data):
@@ -88,6 +90,7 @@ def create_html_table(header, data):
     header_row = "<tr>"
     for column in header:
         header_row += f"<th>{column}</th>"
+    header_row += "<th>操作</th>"
     header_row += "</tr>"
 
     # Data rows
@@ -96,9 +99,25 @@ def create_html_table(header, data):
         data_row = "<tr>"
         for column in item:
             data_row += f"<td>{column}</td>"
+
+        data_row += f"""
+         <td>
+            <button type="button" id="{item[0]}Edit" class="btn btn-outline-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#editModal" style="width: fit-content; ">
+                编辑
+            </button>
+            <button type="button" id="{item[0]}Btn" class="btn btn-outline-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deleteModal" style="width: fit-content; ">
+                删除
+            </button>
+        </td>
+        """
         data_row += "</tr>"
         data_rows += data_row
 
+    print(data_rows)
     # Assemble the HTML table
     html_table = f"""
         <table class="table table-striped table-bordered table-hover"
@@ -120,7 +139,7 @@ def create_mysql_query(formData):
     sortDirect = formData['sortDirect']
     del formData['sortItem']
     del formData['sortDirect']
-    query = 'SELECT * FROM borrow  WHERE 1 = 1 '
+    query = 'SELECT * FROM book  WHERE 1 = 1 '
     for key in formData.keys():
         if 'Lower' in key:
             lowerbound = formData[key]
@@ -153,20 +172,6 @@ def get_table_data():
     formData = dict(request.form)
     print(formData)
     cursor = cnx.cursor()
-    # sortItem = formData['sortItem']
-    # sortDirect = formData['sortDirect']
-    # del formData['sortItem']
-    # del formData['sortDirect']
-    #
-    # query = 'SELECT * FROM borrow  WHERE 1 = 1 '
-    #
-    # for key in formData.keys():
-    #     if formData[key] == '':
-    #         continue
-    #     query = query + " and %s = '%s'" % (key, formData[key])
-    #
-    # if sortItem != 'default':
-    #     query = query + ' ORDER BY ' + sortItem + " " + sortDirect
     query = create_mysql_query(formData)
     print(query)
     cursor.execute(query)
@@ -177,6 +182,36 @@ def get_table_data():
     table = create_html_table(header, data)
     # print(table)
     return table
+
+
+from flask import jsonify
+
+
+@app.route('/get-one-info', methods=['POST'])
+def get_one_info():
+    cursor = cnx.cursor()
+    cursor.execute("describe book")
+    Description = cursor.fetchall()
+    header = [col[0] for col in Description]
+    row_id = request.get_json()['row_id']
+    query = "SELECT * from book where %s = '%s' " % (header[0], row_id)
+    cursor.execute(query)
+    info = cursor.fetchone()
+    # print(header)
+    # print(info)
+    data = {header[i]: info[i] for i in range(len(header))}
+
+    primes = []
+    for col in Description:
+        if 'PRI' in col[3]:
+            primes.append(col[0])
+    response_obj = {
+        "info": data,
+        "primes": primes
+    }
+    response_text = jsonify(response_obj)
+    return response_text
+    # return data
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -207,7 +242,7 @@ def login():
 
 @app.route('/contact', )
 def contact():
-    return render_template('contact.html')
+    return render_template('contact.html', header=[1, 2, 3, 4, 5])
 
 
 if __name__ == '__main__':
