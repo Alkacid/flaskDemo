@@ -117,8 +117,9 @@
                                 <td>{{ column }}</td>
                             {% endfor %}
                             <td>
-                                <button type="button" id="{{ row[0] }}Edit" class="btn btn-outline-primary"
+                                <button type="button" id="{{ row[0] }}Edit" class="btn btn-outline-primary "
                                         data-bs-toggle="modal"
+                                        onclick="get_info(this)"
                                         data-bs-target="#editModal" style="width: fit-content; ">
                                     编辑
                                 </button>
@@ -337,14 +338,12 @@
     });
 
 </script>
-
-<script type="text/javascript">
+<script>
     // 编辑按钮单击事件处理函数
-
     // 选择以 Edit 结尾的所有按钮
-    $('button[id$="Edit"]').click(function (qualifiedName, value) {
-
-        var id = $(this).attr('id'); // 获取当前按钮的id
+    function get_info(btn) {
+        var id = btn.id; // 获取当前按钮的id
+        console.log(id);
         var row_id = id.slice(0, -4); // 去掉末尾的 Edit，得到行的id
         // 在这里根据 row_id 获取当前行的信息，并将信息填入到模态框中
         fetch('/get-one-info', {
@@ -358,15 +357,12 @@
                 return response.json();
             })
             .then(function (data) {
-
                     const info = data.info;
                     const primes = data.primes;
-
-
                     for (var key in info) {
                         $('#' + key + 'Edit').val(info[key]);
                         if (primes.includes(key)) {
-                            document.getElementById(key + 'Edit').setAttribute('disabled', value)
+                            $('#' + key + 'Edit').attr('disabled', true)
                         }
 
                     }
@@ -375,9 +371,44 @@
             .catch(function (error) {
                 console.log(error);
             });
-    });
 
+    }
 </script>
+{#<script type="text/javascript">#}
+{#    // 编辑按钮单击事件处理函数#}
+{#    // 选择以 Edit 结尾的所有按钮#}
+{#    $('button[id$="Edit"]').click(function (qualifiedName, value) {#}
+{##}
+{#        var id = $(this).attr('id'); // 获取当前按钮的id#}
+{#        var row_id = id.slice(0, -4); // 去掉末尾的 Edit，得到行的id#}
+{#        // 在这里根据 row_id 获取当前行的信息，并将信息填入到模态框中#}
+{#        fetch('/get-one-info', {#}
+{#            method: 'POST',#}
+{#            headers: {#}
+{#                'Content-Type': 'application/json'#}
+{#            },#}
+{#            body: JSON.stringify({row_id: row_id}) // 将 row_id 作为请求体发送到后端#}
+{#        })#}
+{#            .then(function (response) {#}
+{#                return response.json();#}
+{#            })#}
+{#            .then(function (data) {#}
+{#                    const info = data.info;#}
+{#                    const primes = data.primes;#}
+{#                    for (var key in info) {#}
+{#                        $('#' + key + 'Edit').val(info[key]);#}
+{#                        if (primes.includes(key)) {#}
+{#                            document.getElementById(key + 'Edit').setAttribute('disabled', value)#}
+{#                        }#}
+{##}
+{#                    }#}
+{#                }#}
+{#            )#}
+{#            .catch(function (error) {#}
+{#                console.log(error);#}
+{#            });#}
+{#    });#}
+{#</script>#}
 {#弃用代码：#}
 <script>
     var selectEl = document.getElementById('sortItem');

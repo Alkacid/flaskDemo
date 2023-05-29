@@ -104,6 +104,7 @@ def create_html_table(header, data):
          <td>
             <button type="button" id="{item[0]}Edit" class="btn btn-outline-primary"
                     data-bs-toggle="modal"
+                    onclick="get_info(this)"
                     data-bs-target="#editModal" style="width: fit-content; ">
                 编辑
             </button>
