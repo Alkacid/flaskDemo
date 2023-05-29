@@ -20,7 +20,6 @@ usersql = {
 }
 
 cnx = mysql.connector.connect(**config)
-Description = []
 app = Flask(__name__)
 
 
@@ -46,6 +45,10 @@ def register():
         return render_template('register.html')
 
 
+def render_sheet(header, data):
+    return render_template('sheet.html', header=header, data=data)
+
+
 # 在 Web 应用程序中呈现数据
 @app.route('/table')
 def table():
@@ -64,8 +67,9 @@ def table():
     data = cursor.fetchall()
     # print(data)
     # 确定表的长度和宽度
+    sheet_html = render_sheet(header, data)
 
-    return render_template('table.html', header=header, data=data, colType=colType, zip=zip)
+    return render_template('table.html', sheet_html=sheet_html, header=header, colType=colType, zip=zip)
 
 
 @app.route('/table/sort', methods=['POST'])
@@ -83,56 +87,6 @@ def sort_by():
         header = [col[0] for col in cursor.fetchall()]
 
         return render_template('table.html', data=data, header=header, len=len(header))
-
-
-def create_html_table(header, data):
-    # Header row
-    header_row = "<tr>"
-    for column in header:
-        header_row += f"<th>{column}</th>"
-    header_row += "<th>操作</th>"
-    header_row += "</tr>"
-
-    # Data rows
-    data_rows = ""
-    for item in data:
-        data_row = "<tr>"
-        for column in item:
-            data_row += f"<td>{column}</td>"
-
-        data_row += f"""
-         <td>
-            <button type="button" id="{item[0]}Edit" class="btn btn-outline-primary"
-                    data-bs-toggle="modal"
-                    onclick="get_info(this)"
-                    data-bs-target="#editModal" style="width: fit-content; ">
-                编辑
-            </button>
-            <button type="button" id="{item[0]}Btn" class="btn btn-outline-primary"
-                    data-bs-toggle="modal"
-                    data-bs-target="#deleteModal" style="width: fit-content; ">
-                删除
-            </button>
-        </td>
-        """
-        data_row += "</tr>"
-        data_rows += data_row
-
-    print(data_rows)
-    # Assemble the HTML table
-    html_table = f"""
-        <table class="table table-striped table-bordered table-hover"
-                       style="width: 80%; table-layout: auto; margin: auto auto" id="table">
-            <thead>
-                {header_row}
-            </thead>
-            <tbody>
-                {data_rows}
-            </tbody>
-        </table>
-    """
-
-    return html_table
 
 
 def create_mysql_query(formData):
@@ -177,12 +131,8 @@ def get_table_data():
     print(query)
     cursor.execute(query)
     data = cursor.fetchall()
-    # print(data)
     header = [col[0] for col in cursor.description]
-    # print(header)
-    table = create_html_table(header, data)
-    # print(table)
-    return table
+    return render_sheet(header, data)
 
 
 from flask import jsonify
@@ -198,8 +148,6 @@ def get_one_info():
     query = "SELECT * from book where %s = '%s' " % (header[0], row_id)
     cursor.execute(query)
     info = cursor.fetchone()
-    # print(header)
-    # print(info)
     data = {header[i]: info[i] for i in range(len(header))}
 
     primes = []
@@ -212,7 +160,6 @@ def get_one_info():
     }
     response_text = jsonify(response_obj)
     return response_text
-    # return data
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -247,5 +194,4 @@ def contact():
 
 
 if __name__ == '__main__':
-    # test_1()
     app.run(host='0.0.0.0')

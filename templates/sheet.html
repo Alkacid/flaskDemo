@@ -1,0 +1,33 @@
+<table class="table table-striped table-bordered table-hover"
+       style="width: 80%; table-layout: auto; margin: auto auto" id="table">
+    <thead>
+    <tr>
+        {% for column in header %}
+            <th data-sort-order="asc"> {{ column.strip() }}</th>
+        {% endfor %}
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="tableBody">
+    {% for row in data %}
+        <tr>
+            {% for column in row %}
+                <td>{{ column }}</td>
+            {% endfor %}
+            <td>
+                <button type="button" id="{{ row[0] }}Edit" class="btn btn-outline-primary "
+                        data-bs-toggle="modal"
+                        onclick="get_info(this)"
+                        data-bs-target="#editModal" style="width: fit-content; ">
+                    编辑
+                </button>
+                <button type="button" id="{{ row[0] }}Btn" class="btn btn-outline-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal" style="width: fit-content; ">
+                    删除
+                </button>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
