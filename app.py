@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import os
 
@@ -8,7 +9,7 @@ config = {
     'user': 'root',
     'password': '+654',
     'host': 'localhost',
-    'database': 'lab1',
+    'database': 'stumanage',
     'raise_on_warnings': True
 }
 usersql = {
@@ -21,6 +22,20 @@ usersql = {
 
 cnx = mysql.connector.connect(**config)
 app = Flask(__name__)
+
+headername = {'record_id': '记录ID', 'student_id': '学号', 'reason': '奖惩类型', 'type': '奖惩类型',
+              'aap_date': '记录日期', 'class_id': '班级号', 'class_teacher': '班主任', 'class_name': '班级名',
+              'college_id': '学院id',
+              'college_name': '开课学院名称', 'grade_record_id': '成绩记录id', 'course_id': '课程号', 'grade': '分数',
+              'course_name': '课程名', 'credits': '学分', 'hours': '学时', 'teacher_id': '授课教师id',
+              'teacher_name': '授课教师', 'exam_time': '考试时间', 'exam_location': '考试地点', 'semester': '开课学期',
+              'major_id': '专业编号', 'major_name': '专业名称',
+              'major_record_id': '变更记录id', 'previous_major_id': '变更前专业', 'current_major_id': '变更后专业',
+              'change_date': '变更日期', 'name': '姓名', 'gender': '性别', 'age': '年龄', 'birthdate': '出生日期',
+              'hometown': '籍贯',
+              'enrollment_date': '入学日期',
+
+              }
 
 
 @app.route('/register', methods=['POST', 'GET'])
@@ -45,48 +60,44 @@ def register():
         return render_template('register.html')
 
 
-def render_sheet(header, data):
-    return render_template('sheet.html', header=header, data=data)
+def render_sheet(header, headername, data):
+    return render_template('sheet.html', headername=headername, header=header, data=data)
 
 
 # 在 Web 应用程序中呈现数据
 @app.route('/table')
 def table():
     cursor = cnx.cursor()
-    cursor.execute("describe book")
+    cursor.execute("describe student_info")
     Description = cursor.fetchall()
-    print(Description)
+
+    query = 'select * from student_info'
+    cursor.execute(query)
+    data = cursor.fetchall()
+
     header = [col[0] for col in Description]
     isInt = ['int' in str(col[1]) for col in Description]
     isFloat = ['float' in str(col[1]) for col in Description]
     isDate = ['date' in str(col[1]) for col in Description]
-    print(header)
     colType = list(zip(isInt, isFloat, isDate))
-    query = "SELECT * FROM book"
-    cursor.execute(query)
-    data = cursor.fetchall()
-    # print(data)
-    # 确定表的长度和宽度
-    sheet_html = render_sheet(header, data)
 
-    return render_template('table.html', sheet_html=sheet_html, header=header, colType=colType, zip=zip)
+    cursor.execute('select * from class')
+    classes = cursor.fetchall()
+    class_ids = [clazz[0] for clazz in classes]
+    classes = ['\t'.join(map(str, clazz)) for clazz in classes]
+    classes = dict(zip(class_ids, classes))
+    print(classes)
 
+    cursor.execute('select * from major')
+    majors = cursor.fetchall()
+    major_ids = [major[0] for major in majors]
+    majors = ['\t'.join(map(str, major)) for major in majors]
+    majors = dict(zip(major_ids, majors))
 
-@app.route('/table/sort', methods=['POST'])
-def sort_by():
-    print('you are here')
-    if request.method == 'POST':
-        # cnx = mysql.connector.connect(**config)
-        cursor = cnx.cursor()
-        sortItem = request.form['sortItem']
-        sortDirect = request.form['sortDirect']
-        cursor.execute("SELECT * FROM book ORDER BY " + sortItem + " " + sortDirect)
-        data = cursor.fetchall()
-        query = "describe book"
-        cursor.execute(query)
-        header = [col[0] for col in cursor.fetchall()]
+    sheet_html = render_sheet(header, headername, data)
 
-        return render_template('table.html', data=data, header=header, len=len(header))
+    return render_template('table.html', sheet_html=sheet_html, header=header, headername=headername, colType=colType,
+                           zip=zip, majors=majors, classes=classes)
 
 
 def create_mysql_query(formData):
@@ -94,7 +105,7 @@ def create_mysql_query(formData):
     sortDirect = formData['sortDirect']
     del formData['sortItem']
     del formData['sortDirect']
-    query = 'SELECT * FROM book  WHERE 1 = 1 '
+    query = 'SELECT * FROM student_info  WHERE 1 = 1 '
     for key in formData.keys():
         if 'Lower' in key:
             lowerbound = formData[key]
@@ -132,7 +143,7 @@ def get_table_data():
     cursor.execute(query)
     data = cursor.fetchall()
     header = [col[0] for col in cursor.description]
-    return render_sheet(header, data)
+    return render_sheet(header, headername, data)
 
 
 from flask import jsonify
@@ -141,13 +152,20 @@ from flask import jsonify
 @app.route('/get-one-info', methods=['POST'])
 def get_one_info():
     cursor = cnx.cursor()
-    cursor.execute("describe book")
+    cursor.execute("describe student_info")
     Description = cursor.fetchall()
     header = [col[0] for col in Description]
     row_id = request.get_json()['row_id']
-    query = "SELECT * from book where %s = '%s' " % (header[0], row_id)
+    query = "SELECT * from student_info where %s = '%s' " % (header[0], row_id)
     cursor.execute(query)
     info = cursor.fetchone()
+    strinfo = []
+    for i in info:
+        if isinstance(i, datetime.date):
+            i = i.strftime('%Y-%m-%d')
+        strinfo.append(i)
+    info = strinfo
+    print(info)
     data = {header[i]: info[i] for i in range(len(header))}
 
     primes = []

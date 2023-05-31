@@ -70,19 +70,19 @@
                     </button>
 
                     <div class="input-group" style="width: fit-content;margin-left: 5px">
-                        <span class="input-group-text">name</span>
-                        <input type="text" class="form-control" id="name" name="name">
+                        <span class="input-group-text">学号</span>
+                        <input type="text" class="form-control" id="student_id" name="student_id">
                     </div>
                     <div class="input-group" style="width: fit-content;margin-left: 5px">
-                        <span class="input-group-text">author</span>
-                        <input type="text" class="form-control" id="author" name="author">
+                        <span class="input-group-text">姓名</span>
+                        <input type="text" class="form-control" id="name" name="name">
                     </div>
                     <div style="width: fit-content;margin-left: 5px">
                         <select name="sortItem" id="sortItem" class="form-select"
                                 aria-label="Default select example">
                             <option selected value="default">默认排序</option>
                             {% for column in header %}
-                                <option value="{{ column }}">{{ column }}</option>
+                                <option value="{{ column }}">{{ headername[column] }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -137,7 +137,7 @@
 
                     {% for column, type in zip(header,colType) %}
                         <div class="input-group" style="width:100%; margin-bottom: 5px">
-                            <span class="input-group-text">{{ column }}</span>
+                            <span class="input-group-text">{{ headername[column] }}</span>
                             {% if type[0] %} <!-- 整数 -->
                                 <input type="number" class="form-control" id="{{ column }}DtailLow" title="请输入整数"
                                        name="{{ column }}Lower">
@@ -165,7 +165,7 @@
                                         aria-label="Default select example">
                                     <option selected value="default">默认排序</option>
                                     {% for column in header %}
-                                        <option value="{{ column }}">{{ column }}</option>
+                                        <option value="{{ column }}">{{ headername[column] }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -207,21 +207,45 @@
                 </div>
                 <div class="modal-body">
                     {% for column, type in zip(header,colType) %}
-
-                        <div class="input-group" style="width:100%; margin-bottom: 5px">
-                            <span class="input-group-text">{{ column }}</span>
-                            {% if type[0] %} <!-- 整数 -->
-                                <input type="number" class="form-control" id="{{ column }}Edit" title="请输入整数"
-                                       name={{ column }}>
-                            {% elif type[1] %}
-                                <input type="text" pattern="\d+(\.\d+)?" class="form-control" title="请输入浮点数或整数"
-                                       id="{{ column }}Edit" name={{ column }}>
-                            {% elif type[2] %}
-                                <input type="date" class="form-control" id="{{ column }}Edit" name={{ column }}>
-                            {% else %}
-                                <input type="text" class="form-control" id="{{ column }}Edit" name={{ column }}>
+                        {% if 'class' in column %}
+                            {% if column == 'class_id' %}
+                                <div class="input-group" style="width:100%; margin-bottom: 5px">
+                                    <span class="input-group-text">班级</span>
+                                    <select name="class_id" id="class_idEdit" class="form-select">
+                                        {% for classid in classes %}
+                                            <option value={{ classid }}>{{ classes[classid] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             {% endif %}
-                        </div>
+                        {% elif 'major' in column %}
+                            {% if column == 'major_id' %}
+                                <div class="input-group" style="width:100%; margin-bottom: 5px">
+                                    <span class="input-group-text">专业</span>
+                                    <select name="major_id" id="major_idEdit" class="form-select">
+                                        {% for majorid in majors %}
+                                            <option value={{ majorid }}>{{ majors[majorid] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="input-group" style="width:100%; margin-bottom: 5px">
+                                <span class="input-group-text">{{ headername[column] }}</span>
+                                {% if type[0] %} <!-- 整数 -->
+                                    <input type="number" class="form-control" id="{{ column }}Edit" title="请输入整数"
+                                           name={{ column }}>
+                                {% elif type[1] %} <!-- 浮点数 -->
+                                    <input type="text" pattern="\d+(\.\d+)?" class="form-control"
+                                           title="请输入浮点数或整数"
+                                           id="{{ column }}Edit" name={{ column }}>
+                                {% elif type[2] %} <!-- 日期 -->
+                                    <input type="date" class="form-control" id="{{ column }}Edit" name={{ column }}>
+                                {% else %} <!-- 字符串 -->
+                                    <input type="text" class="form-control" id="{{ column }}Edit" name={{ column }}>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     {% endfor %}
 
                 </div>
@@ -334,7 +358,6 @@
                         if (primes.includes(key)) {
                             $('#' + key + 'Edit').attr('disabled', true)
                         }
-
                     }
                 }
             )
