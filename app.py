@@ -61,8 +61,8 @@ def register():
         return render_template('register.html')
 
 
-def render_sheet(header, headername, data):
-    return render_template('sheet.html', headername=headername, header=header, data=data)
+def render_sheet(header, headername, data, deletable):
+    return render_template('sheet.html', headername=headername, header=header, data=data, deletable=deletable)
 
 
 # 在 Web 应用程序中呈现数据
@@ -87,7 +87,7 @@ def table():
     class_ids = [clazz[0] for clazz in classes]
     classes = ['\t'.join(map(str, clazz)) for clazz in classes]
     classes = dict(zip(class_ids, classes))
-    print(classes)
+    # print(classes)
 
     cursor.execute('select * from major')
     majors = cursor.fetchall()
@@ -95,18 +95,39 @@ def table():
     majors = ['\t'.join(map(str, major)) for major in majors]
     majors = dict(zip(major_ids, majors))
 
-    sheet_html = render_sheet(header, headername, data)
+    sheet_html = render_sheet(header, headername, data, deletable=True)
 
     return render_template('table.html', sheet_html=sheet_html, header=header, headername=headername, colType=colType,
                            zip=zip, majors=majors, classes=classes)
 
 
-def create_mysql_search(formData):
+@app.route('/major')
+def major():
+    cursor = cnx.cursor()
+    cursor.execute("describe major")
+    Description = cursor.fetchall()
+    query = 'select * from major'
+    cursor.execute(query)
+    data = cursor.fetchall()
+
+    header = [col[0] for col in Description]
+    isInt = ['int' in str(col[1]) for col in Description]
+    isFloat = ['float' in str(col[1]) for col in Description]
+    isDate = ['date' in str(col[1]) for col in Description]
+    colType = list(zip(isInt, isFloat, isDate))
+
+    sheet_html = render_sheet(header, headername, data, deletable=False)
+
+    return render_template('major.html', sheet_html=sheet_html, header=header, headername=headername, colType=colType,
+                           zip=zip)
+
+
+def create_mysql_search(formData, tableName):
     sortItem = formData['sortItem']
     sortDirect = formData['sortDirect']
     del formData['sortItem']
     del formData['sortDirect']
-    query = 'SELECT * FROM student_info  WHERE 1 = 1 '
+    query = 'SELECT * FROM ' + tableName + ' WHERE 1 = 1 '
     for key in formData.keys():
         if 'Lower' in key:
             lowerbound = formData[key]
@@ -126,7 +147,8 @@ def create_mysql_search(formData):
         else:
             if formData[key] == '':
                 continue
-            query = query + " and %s = '%s' " % (key, formData[key])
+            # query = query + " and %s = '%s' " % (key, formData[key])
+            query = query + " and %s like '%%%s%%' " % (key, formData[key])
 
     if sortItem != 'default':
         query = query + ' ORDER BY ' + sortItem + " " + sortDirect
@@ -138,13 +160,22 @@ def create_mysql_search(formData):
 def get_table_data():
     formData = dict(request.form)
     print(formData)
+    tableName = ''
+    deletable = True
+    keys = formData.keys()
+    if 'name' in keys:
+        tableName = 'student_info'
+        deletable = True
+    elif 'major_name' in keys:
+        deletable = False
+        tableName = 'major'
     cursor = cnx.cursor()
-    query = create_mysql_search(formData)
+    query = create_mysql_search(formData, tableName)
     print(query)
     cursor.execute(query)
     data = cursor.fetchall()
     header = [col[0] for col in cursor.description]
-    return render_sheet(header, headername, data)
+    return render_sheet(header, headername, data, deletable)
 
 
 @app.route('/edit-table', methods=['POST'])
@@ -152,17 +183,20 @@ def edit_table():
     editData = dict(request.form)
     print(editData)
     keys = editData.keys()
+    cursor = cnx.cursor()
+    args = list(editData.values())
+    status = ''
+    args.append(status)
     if 'gender' in keys:
-        cursor = cnx.cursor()
-        args = list(editData.values())
-        status = ''
-        args.append(status)
-        results = cursor.callproc('editstu', args=args)
-        cnx.commit()
-        status = results[-1]
-        print(status)
+        status = cursor.callproc('editstu', args=args)
+    elif 'major_name' in keys:
+        status = cursor.callproc('editmajor', args=args)
 
-    return status
+    status = status[-1]
+    if status:
+        return 'OK'
+    else:
+        return '不OK'
 
 
 @app.route('/insert-table', methods=['POST'])
@@ -170,29 +204,39 @@ def insert_table():
     insertData = dict(request.form)
     print(insertData)
     keys = insertData.keys()
+    cursor = cnx.cursor()
+    args = list(insertData.values())
+    status = ''
+    args.append(status)
     if 'gender' in keys:
-        cursor = cnx.cursor()
-        args = list(insertData.values())
-        status = ''
-        args.append(status)
         results = cursor.callproc('insertstu', args=args)
-        cnx.commit()
-        status = results[-1]
-        print(status)
 
-    return status
+    status = results[-1]
+    if status:
+        return 'OK'
+    else:
+        return '不OK'
 
 
 @app.route('/get-one-info', methods=['POST'])
 def get_one_info():
     cursor = cnx.cursor()
-    cursor.execute("describe student_info")
+    requ = request.get_json()
+    print(requ)
+    tableName = ''
+    if 'student_id' in requ:
+        tableName = 'student_info'
+        row_id = requ['student_id']
+        primes = ['student_id']
+    elif 'major_id' in requ:
+        tableName = 'major'
+        row_id = requ['major_id']
+        primes = ['major_id']
+    cursor.execute('desc ' + tableName)
     Description = cursor.fetchall()
     header = [col[0] for col in Description]
-    requ = request.get_json()
-    if 'student_id' in requ:
-        row_id = requ['student_id']
-        query = "SELECT * from student_info where %s = '%s' " % (header[0], row_id)
+    query = "SELECT * from %s where %s = '%s' " % (tableName, header[0], row_id)
+    print(query)
     cursor.execute(query)
     info = cursor.fetchone()
     strinfo = []
@@ -204,7 +248,6 @@ def get_one_info():
     print(info)
     data = {header[i]: info[i] for i in range(len(header))}
 
-    primes = ['student_id']
     response_obj = {
         "info": data,
         "primes": primes
@@ -216,13 +259,17 @@ def get_one_info():
 @app.route('/delete-one', methods=['POST'])
 def delete_one():
     requ = request.get_json()
+    print(requ)
+    cursor = cnx.cursor()
     if 'student_id' in requ:
         row_id = requ['student_id']
-        cursor = cnx.cursor()
-        query = "DELETE  from studentbasicinfo where student_id  = '%s' " % (row_id)
-        cursor.execute(query)
-        cnx.commit()
-        return 1
+        print(row_id)
+        status = cursor.callproc('delstu', args=(row_id, ''))
+
+    if status[-1]:
+        return 'OK'
+    else:
+        return '不OK'
 
 
 @app.route('/', methods=['GET', 'POST'])
