@@ -21,8 +21,9 @@
                         data-bs-target="#editModal" style="width: fit-content; ">
                     编辑
                 </button>
-                <button type="button" id="{{ row[0] }}Btn" class="btn btn-outline-primary"
+                <button type="button" id="{{ row[0] }}Delete" class="btn btn-outline-danger"
                         data-bs-toggle="modal"
+                        onclick="delete_one(this)"
                         data-bs-target="#deleteModal" style="width: fit-content; ">
                     删除
                 </button>

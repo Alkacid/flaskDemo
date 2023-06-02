@@ -4,12 +4,13 @@ import os
 
 import mysql.connector
 from flask import Flask, render_template, request, redirect
+from flask import jsonify
 
 config = {
     'user': 'root',
     'password': '+654',
     'host': 'localhost',
-    'database': 'stumanage',
+    'database': 'stu',
     'raise_on_warnings': True
 }
 usersql = {
@@ -100,7 +101,7 @@ def table():
                            zip=zip, majors=majors, classes=classes)
 
 
-def create_mysql_query(formData):
+def create_mysql_search(formData):
     sortItem = formData['sortItem']
     sortDirect = formData['sortDirect']
     del formData['sortItem']
@@ -138,7 +139,7 @@ def get_table_data():
     formData = dict(request.form)
     print(formData)
     cursor = cnx.cursor()
-    query = create_mysql_query(formData)
+    query = create_mysql_search(formData)
     print(query)
     cursor.execute(query)
     data = cursor.fetchall()
@@ -146,7 +147,40 @@ def get_table_data():
     return render_sheet(header, headername, data)
 
 
-from flask import jsonify
+@app.route('/edit-table', methods=['POST'])
+def edit_table():
+    editData = dict(request.form)
+    print(editData)
+    keys = editData.keys()
+    if 'gender' in keys:
+        cursor = cnx.cursor()
+        args = list(editData.values())
+        status = ''
+        args.append(status)
+        results = cursor.callproc('editstu', args=args)
+        cnx.commit()
+        status = results[-1]
+        print(status)
+
+    return status
+
+
+@app.route('/insert-table', methods=['POST'])
+def insert_table():
+    insertData = dict(request.form)
+    print(insertData)
+    keys = insertData.keys()
+    if 'gender' in keys:
+        cursor = cnx.cursor()
+        args = list(insertData.values())
+        status = ''
+        args.append(status)
+        results = cursor.callproc('insertstu', args=args)
+        cnx.commit()
+        status = results[-1]
+        print(status)
+
+    return status
 
 
 @app.route('/get-one-info', methods=['POST'])
@@ -155,8 +189,10 @@ def get_one_info():
     cursor.execute("describe student_info")
     Description = cursor.fetchall()
     header = [col[0] for col in Description]
-    row_id = request.get_json()['row_id']
-    query = "SELECT * from student_info where %s = '%s' " % (header[0], row_id)
+    requ = request.get_json()
+    if 'student_id' in requ:
+        row_id = requ['student_id']
+        query = "SELECT * from student_info where %s = '%s' " % (header[0], row_id)
     cursor.execute(query)
     info = cursor.fetchone()
     strinfo = []
@@ -168,16 +204,25 @@ def get_one_info():
     print(info)
     data = {header[i]: info[i] for i in range(len(header))}
 
-    primes = []
-    for col in Description:
-        if 'PRI' in col[3]:
-            primes.append(col[0])
+    primes = ['student_id']
     response_obj = {
         "info": data,
         "primes": primes
     }
     response_text = jsonify(response_obj)
     return response_text
+
+
+@app.route('/delete-one', methods=['POST'])
+def delete_one():
+    requ = request.get_json()
+    if 'student_id' in requ:
+        row_id = requ['student_id']
+        cursor = cnx.cursor()
+        query = "DELETE  from studentbasicinfo where student_id  = '%s' " % (row_id)
+        cursor.execute(query)
+        cnx.commit()
+        return 1
 
 
 @app.route('/', methods=['GET', 'POST'])
