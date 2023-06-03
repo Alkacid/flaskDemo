@@ -60,8 +60,18 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link " aria-current="page">
-                        成绩信息
+                    <a href="/majorchange" class="nav-link " aria-current="page">
+                        专业变更信息
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/coursemanage" class="nav-link" aria-current="page">
+                        开课信息
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/coursegrades" class="nav-link " aria-current="page">
+                        选课与成绩信息
                     </a>
                 </li>
             </ul>
@@ -70,7 +80,7 @@
     <div class="" style="width: 85%">
         <div class="container ">
             <div class=" container mt-3" style="width: 100%">
-                <form class="d-flex justify-content-end" action="#" method="post" id="sortForm">
+                <form class="d-flex justify-content-center" action="#" method="post" id="sortForm">
                     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
                             data-bs-target="#searchModal" style="width: fit-content; ">
                         详细检索
@@ -99,11 +109,11 @@
                             <option value="DESC">逆序</option>
                         </select>
                     </div>
-                    <div class="col-md-2" style="margin-left: 5px;">
+                    <div class="" style="margin-left: 5px;">
                         <button type="submit" class="btn btn-primary">查询</button>
                     </div>
                     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
-                            data-bs-target="#insertModal" style="width: fit-content; ">
+                            data-bs-target="#insertModal" style="width: fit-content; margin-left: 40px ">
                         新建
                     </button>
                 </form>
@@ -148,7 +158,6 @@
     <div class="modal fade" id="searchModal">
         <div class="modal-dialog">
             <div class="modal-content">
-
                 <!-- 模态框头部 -->
                 <div class="modal-header">
                     <h4 class="modal-title">详细检索信息</h4>

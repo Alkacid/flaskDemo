@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>专业信息</title>
+    <title>开课信息</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/css/bootstrap.css">
     <link rel="stylesheet" href="/static/css/fcicon.css">
@@ -54,7 +54,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link  active" aria-current="page">
+                    <a href="/major" class="nav-link " aria-current="page">
                         专业信息
                     </a>
                 </li>
@@ -64,12 +64,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="/coursemanage" class="nav-link" aria-current="page">
+                    <a href="#" class="nav-link  active" aria-current="page">
                         开课信息
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link " aria-current="page">
+                    <a href="/coursegrades" class="nav-link " aria-current="page">
                         选课与成绩信息
                     </a>
                 </li>
@@ -80,14 +80,17 @@
         <div class="container ">
             <div class=" container mt-3" style="width: 100%">
                 <form class="d-flex justify-content-center" action="#" method="post" id="sortForm">
-
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
+                            data-bs-target="#searchModal" style="width: fit-content; ">
+                        详细检索
+                    </button>
                     <div class="input-group" style="width: fit-content;margin-left: 5px">
-                        <span class="input-group-text">专业编号</span>
-                        <input type="text" class="form-control" id="major_id" name="major_id">
+                        <span class="input-group-text">课程号</span>
+                        <input type="text" class="form-control" id="course_id" name="course_id">
                     </div>
                     <div class="input-group" style="width: fit-content;margin-left: 5px">
-                        <span class="input-group-text">专业名称</span>
-                        <input type="text" class="form-control" id="major_name" name="major_name">
+                        <span class="input-group-text">课程名</span>
+                        <input type="text" class="form-control" id="course_name" name="course_name">
                     </div>
                     <div style="width: fit-content;margin-left: 5px">
                         <select name="sortItem" id="sortItem" class="form-select"
@@ -115,7 +118,7 @@
 
             </div>
             {#数据表：body分离#}
-            <div class="container mt-3" style="width: 70%" id="table-container">
+            <div class="container mt-3" style="width: 90%" id="table-container">
 
                 {{ sheet_html|safe }}
 
@@ -145,38 +148,70 @@
         </div>
     </div>
 </div>
-<form action="#" method="post" id="editForm">
-    <div class="modal fade" id="editModal">
+<form action="#" method="post" id="sortDetailForm">
+    <div class="modal fade" id="searchModal">
         <div class="modal-dialog">
             <div class="modal-content">
+                <!-- 模态框头部 -->
                 <div class="modal-header">
-                    <h4 class="modal-title">编辑</h4>
+                    <h4 class="modal-title">详细检索信息</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
+
+                <!-- 模态框内容 -->
                 <div class="modal-body">
+
                     {% for column, type in zip(header,colType) %}
                         <div class="input-group" style="width:100%; margin-bottom: 5px">
                             <span class="input-group-text">{{ headername[column] }}</span>
                             {% if type[0] %} <!-- 整数 -->
-                                <input type="number" class="form-control" id="{{ column }}Edit" title="请输入整数"
-                                       name={{ column }}>
-                            {% elif type[1] %} <!-- 浮点数 -->
-                                <input type="text" pattern="\d+(\.\d+)?" class="form-control"
-                                       title="请输入浮点数或整数"
-                                       id="{{ column }}Edit" name={{ column }}>
-                            {% elif type[2] %} <!-- 日期 -->
-                                <input type="date" class="form-control" id="{{ column }}Edit" name={{ column }}>
-                            {% else %} <!-- 字符串 -->
-                                <input type="text" class="form-control" id="{{ column }}Edit" name={{ column }}>
+                                <input type="number" class="form-control" id="{{ column }}DtailLow" title="请输入整数"
+                                       name="{{ column }}Lower">
+                                <input type="number" class="form-control" id="{{ column }}DtailUpper" title="请输入整数"
+                                       name="{{ column }}Upper">
+                            {% elif type[1] %}
+                                <input type="text" pattern="\d+(\.\d+)?" class="form-control" title="请输入浮点数或整数"
+                                       id="{{ column }}DtailLower" name="{{ column }}Lower">
+                                <input type="text" pattern="\d+(\.\d+)?" class="form-control" title="请输入浮点数或整数"
+                                       id="{{ column }}DtailUpper" name="{{ column }}Upper">
+                            {% elif type[2] %}
+                                <input type="date" class="form-control" id="{{ column }}DtailLower"
+                                       name="{{ column }}Lower">
+                                <input type="date" class="form-control" id="{{ column }}DtailUpper"
+                                       name="{{ column }}Upper">
+                            {% else %}
+                                <input type="text" class="form-control" id="{{ column }}Dtail" name={{ column }}>
                             {% endif %}
                         </div>
-
                     {% endfor %}
+                    <div class="d-flex justify-content-between">
+                        <div class=" d-flex justify-content-start">
+                            <div style="width: fit-content">
+                                <select name="sortItem" id="sortItemDetail" class="form-select"
+                                        aria-label="Default select example">
+                                    <option selected value="default">默认排序</option>
+                                    {% for column in header %}
+                                        <option value="{{ column }}">{{ headername[column] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div style="width: auto">
+                                <select name="sortDirect" id="sortDirectDetail" class="form-select">
+                                    <option value="ASC">正序</option>
+                                    <option value="DESC">逆序</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class=" d-flex justify-content-end">
+                            <button type="button" id="reset-btn" class="btn btn-outline-primary">重置筛选条件</button>
+                        </div>
+                    </div>
 
                 </div>
                 <div class="modal-footer">
                     <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary">修改</button>
+                        <button type="submit" class="btn btn-primary">查询</button>
                         <button type="button" class="btn btn-danger" style="margin-left: 5px" data-bs-dismiss="modal">
                             关闭
                         </button>
@@ -212,6 +247,7 @@
                                 <input type="text" class="form-control" id="{{ column }}Insert" name={{ column }}>
                             {% endif %}
                         </div>
+
                     {% endfor %}
 
                 </div>
@@ -228,9 +264,94 @@
         </div>
     </div>
 </form>
+<form action="#" method="post" id="editForm">
+    <div class="modal fade" id="editModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">编辑</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% for column, type in zip(header,colType) %}
 
+                        <div class="input-group" style="width:100%; margin-bottom: 5px">
+                            <span class="input-group-text">{{ headername[column] }}</span>
+                            {% if type[0] %} <!-- 整数 -->
+                                <input type="number" class="form-control" id="{{ column }}Edit" title="请输入整数"
+                                       name={{ column }}>
+                            {% elif type[1] %} <!-- 浮点数 -->
+                                <input type="text" pattern="\d+(\.\d+)?" class="form-control"
+                                       title="请输入浮点数或整数"
+                                       id="{{ column }}Edit" name={{ column }}>
+                            {% elif type[2] %} <!-- 日期 -->
+                                <input type="date" class="form-control" id="{{ column }}Edit" name={{ column }}>
+                            {% else %} <!-- 字符串 -->
+                                <input type="text" class="form-control" id="{{ column }}Edit" name={{ column }}>
+                            {% endif %}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+                <div class="modal-footer">
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">修改</button>
+                        <button type="button" class="btn btn-danger" style="margin-left: 5px" data-bs-dismiss="modal">
+                            关闭
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    // 获取表单和重置按钮
+
+    const myForm = document.getElementById('sortDetailForm');
+    const resetBtn = document.getElementById('reset-btn');
+
+    // 为重置按钮添加点击事件
+    resetBtn.addEventListener('click', () => {
+        // 获取表单中的所有输入框
+        const inputs = myForm.querySelectorAll('input');
+        // 将所有输入框的value设置为空字符串
+        inputs.forEach(input => input.value = '');
+    });
+
+</script>
+<script>
+    const formDetail = document.querySelector('#sortDetailForm')
+
+    const tableContainer = document.querySelector('#table-container');
+
+    // 监听表单提交事件
+    formDetail.addEventListener('submit', e => {
+
+        e.preventDefault();
+
+        // 获取表单数据
+        const formDataDetail = new FormData(formDetail);
+
+        // 发送 AJAX 请求或 Fetch 请求
+        fetch('/get-table-data', {
+            method: 'POST',
+            body: formDataDetail
+        })
+            .then(response => response.text())
+            .then(data => {
+                // 将返回的数据插入表格容器中
+                tableContainer.innerHTML = data;
+            })
+            .catch(error => console.error(error));
+    });
+</script>
 <script>
     const formInsert = document.querySelector('#insertForm')
+
+
     // 监听表单提交事件
     formInsert.addEventListener('submit', e => {
 
@@ -255,30 +376,10 @@
     });
 </script>
 <script>
-    const formEdit = document.querySelector('#editForm');
-    formEdit.addEventListener('submit', e => {
-        e.preventDefault();
-        const editData = new FormData(formEdit);
-        fetch('/edit-table', {
-            method: 'POST',
-            body: editData
-        }).then(response => response.text())
-            .then(status => {
-                console.log(status)
-                if (status) {
-                    alert(status);
-                }
-
-            })
-            .catch(error => console.error(error));
-
-    })
-</script>
-<script>
     // 获取表单和表格容器
     const form = document.querySelector('#sortForm');
-    const tableContainer = document.querySelector('#table-container');
 
+    console.log('you are here');
     // 监听表单提交事件
     form.addEventListener('submit', e => {
         e.preventDefault();
@@ -301,6 +402,26 @@
 
 </script>
 <script>
+    const formEdit = document.querySelector('#editForm');
+    formEdit.addEventListener('submit', e => {
+        e.preventDefault();
+        const editData = new FormData(formEdit);
+        fetch('/edit-table', {
+            method: 'POST',
+            body: editData
+        }).then(response => response.text())
+            .then(status => {
+                console.log(status)
+                if (status) {
+                    alert(status);
+                }
+
+            })
+            .catch(error => console.error(error));
+
+    })
+</script>
+<script>
     function get_info(btn) {
         var id = btn.id; // 获取当前按钮的id
         console.log(id);
@@ -312,7 +433,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({major_id: row_id}) // 将 row_id 作为请求体发送到后端
+            body: JSON.stringify({course_id: row_id}) // 将 row_id 作为请求体发送到后端
         })
             .then(function (response) {
                 return response.json();
@@ -332,6 +453,48 @@
                 console.log(error);
             });
     }
+</script>
+<script>
+    let row_id_to_delete = null;
+    let ready_delete = false;
+
+    function delete_one(btn) {
+        var id = btn.id; // 获取当前按钮的id
+        console.log(id);
+        row_id_to_delete = id.slice(0, -6); // 去掉末尾的 Edit，得到行的id
+        // 在这里根据 row_id 获取当前行的信息，并将信息填入到模态框中
+        ready_delete = true;
+    }
+
+    const deleteBtn = document.getElementById('deleteBtn');
+    deleteBtn.addEventListener('click', ev => {
+        console.log(row_id_to_delete);
+        if (ready_delete) {
+            fetch('/delete-one', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({course_id: row_id_to_delete}) // 将 row_id 作为请求体发送到后端
+            })
+                .then(function (response) {
+                    return response.text();
+                })
+                .then(function (data) {
+                        console.log(data);
+                        ready_delete = false;
+                        if (data) {
+                            alert(data);
+                        }
+
+                    }
+                )
+                .catch(function (error) {
+                    console.log(error);
+                });
+
+        }
+    });
 </script>
 </body>
 </html>

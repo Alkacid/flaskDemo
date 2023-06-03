@@ -28,13 +28,14 @@ headername = {'record_id': '记录ID', 'student_id': '学号', 'reason': '奖惩
               'aap_date': '记录日期', 'class_id': '班级号', 'class_teacher': '班主任', 'class_name': '班级名',
               'college_id': '学院id',
               'college_name': '开课学院名称', 'grade_record_id': '成绩记录id', 'course_id': '课程号', 'grade': '分数',
-              'course_name': '课程名', 'credits': '学分', 'hours': '学时', 'teacher_id': '授课教师id',
-              'teacher_name': '授课教师', 'exam_time': '考试时间', 'exam_location': '考试地点', 'semester': '开课学期',
+              'course_name': '课程名', 'credits': '学分', 'hours': '学时', 'teacher': '授课教师'
+    , 'exam_time': '考试时间', 'exam_location': '考试地点', 'semester': '开课学期',
               'major_id': '专业编号', 'major_name': '专业名称',
-              'major_record_id': '变更记录id', 'previous_major_id': '变更前专业', 'current_major_id': '变更后专业',
+              'major_record_id': '变更记录id', 'previous_major_id': '变更前专业编号',
+              'current_major_id': '变更后专业编号',
               'change_date': '变更日期', 'name': '姓名', 'gender': '性别', 'age': '年龄', 'birthdate': '出生日期',
               'hometown': '籍贯',
-              'enrollment_date': '入学日期',
+              'enrollment_date': '入学日期', 'previous_major_name': '变更前专业名称', 'current_major_name': '变更后专业名称'
 
               }
 
@@ -61,11 +62,20 @@ def register():
         return render_template('register.html')
 
 
-def render_sheet(header, headername, data, deletable):
-    return render_template('sheet.html', headername=headername, header=header, data=data, deletable=deletable)
+def render_sheet(header, headername, data, deletable, editable):
+    return render_template('sheet.html', headername=headername, header=header, data=data, deletable=deletable,
+                           editable=editable)
 
 
-# 在 Web 应用程序中呈现数据
+def get_header_and_types(Description):
+    header = [col[0] for col in Description]
+    isInt = ['int' in str(col[1]) for col in Description]
+    isFloat = ['float' in str(col[1]) for col in Description]
+    isDate = ['date' in str(col[1]) for col in Description]
+    colType = list(zip(isInt, isFloat, isDate))
+    return header, colType
+
+
 @app.route('/table')
 def table():
     cursor = cnx.cursor()
@@ -76,11 +86,12 @@ def table():
     cursor.execute(query)
     data = cursor.fetchall()
 
-    header = [col[0] for col in Description]
-    isInt = ['int' in str(col[1]) for col in Description]
-    isFloat = ['float' in str(col[1]) for col in Description]
-    isDate = ['date' in str(col[1]) for col in Description]
-    colType = list(zip(isInt, isFloat, isDate))
+    header, colType = get_header_and_types(Description)
+    # header = [col[0] for col in Description]
+    # isInt = ['int' in str(col[1]) for col in Description]
+    # isFloat = ['float' in str(col[1]) for col in Description]
+    # isDate = ['date' in str(col[1]) for col in Description]
+    # colType = list(zip(isInt, isFloat, isDate))
 
     cursor.execute('select * from class')
     classes = cursor.fetchall()
@@ -95,7 +106,7 @@ def table():
     majors = ['\t'.join(map(str, major)) for major in majors]
     majors = dict(zip(major_ids, majors))
 
-    sheet_html = render_sheet(header, headername, data, deletable=True)
+    sheet_html = render_sheet(header, headername, data, deletable=True, editable=True)
 
     return render_template('table.html', sheet_html=sheet_html, header=header, headername=headername, colType=colType,
                            zip=zip, majors=majors, classes=classes)
@@ -110,15 +121,65 @@ def major():
     cursor.execute(query)
     data = cursor.fetchall()
 
-    header = [col[0] for col in Description]
-    isInt = ['int' in str(col[1]) for col in Description]
-    isFloat = ['float' in str(col[1]) for col in Description]
-    isDate = ['date' in str(col[1]) for col in Description]
-    colType = list(zip(isInt, isFloat, isDate))
+    header, colType = get_header_and_types(Description)
 
-    sheet_html = render_sheet(header, headername, data, deletable=False)
+    sheet_html = render_sheet(header, headername, data, deletable=False, editable=True)
 
     return render_template('major.html', sheet_html=sheet_html, header=header, headername=headername, colType=colType,
+                           zip=zip)
+
+
+@app.route('/majorchange')
+def majorchange():
+    cursor = cnx.cursor()
+    cursor.execute("describe major_change_info")
+    Description = cursor.fetchall()
+    query = 'select * from major_change_info'
+    cursor.execute(query)
+    data = cursor.fetchall()
+
+    header, colType = get_header_and_types(Description)
+
+    sheet_html = render_sheet(header, headername, data, deletable=False, editable=False)
+
+    return render_template('majorchange.html', sheet_html=sheet_html, header=header, headername=headername,
+                           colType=colType,
+                           zip=zip)
+
+
+@app.route('/coursemanage')
+def coursemanage():
+    cursor = cnx.cursor()
+    cursor.execute("describe coursemanagement")
+    Description = cursor.fetchall()
+    query = 'select * from coursemanagement'
+    cursor.execute(query)
+    data = cursor.fetchall()
+
+    header, colType = get_header_and_types(Description)
+
+    sheet_html = render_sheet(header, headername, data, deletable=False, editable=True)
+
+    return render_template('coursemanage.html', sheet_html=sheet_html, header=header, headername=headername,
+                           colType=colType,
+                           zip=zip)
+
+
+@app.route('/coursegrades')
+def coursegrades():
+    cursor = cnx.cursor()
+    cursor.execute("describe grade_info")
+    Description = cursor.fetchall()
+    query = 'select * from grade_info'
+    cursor.execute(query)
+    data = cursor.fetchall()
+
+    header, colType = get_header_and_types(Description)
+
+    sheet_html = render_sheet(header, headername, data, deletable=True, editable=True)
+
+    return render_template('coursegrades.html', sheet_html=sheet_html, header=header, headername=headername,
+                           colType=colType,
                            zip=zip)
 
 
@@ -163,19 +224,33 @@ def get_table_data():
     tableName = ''
     deletable = True
     keys = formData.keys()
-    if 'name' in keys:
+    if 'major_record_id' in keys:
+        tableName = 'major_change_info'
+        deletable = False
+        editable = False
+    elif 'grade_record_id' in keys:
+        tableName = 'grade_info'
+        deletable = True
+        editable = True
+    elif 'name' in keys:
         tableName = 'student_info'
         deletable = True
+        editable = True
     elif 'major_name' in keys:
         deletable = False
         tableName = 'major'
+        editable = True
+    elif 'course_name' in keys:
+        tableName = 'coursemanagement'
+        deletable = False
+        editable = True
     cursor = cnx.cursor()
     query = create_mysql_search(formData, tableName)
     print(query)
     cursor.execute(query)
     data = cursor.fetchall()
     header = [col[0] for col in cursor.description]
-    return render_sheet(header, headername, data, deletable)
+    return render_sheet(header, headername, data, deletable, editable)
 
 
 @app.route('/edit-table', methods=['POST'])
@@ -191,6 +266,8 @@ def edit_table():
         status = cursor.callproc('editstu', args=args)
     elif 'major_name' in keys:
         status = cursor.callproc('editmajor', args=args)
+    elif 'course_name' in keys:
+        status = cursor.callproc('editcm', args=args)
 
     status = status[-1]
     if status:
@@ -210,6 +287,12 @@ def insert_table():
     args.append(status)
     if 'gender' in keys:
         results = cursor.callproc('insertstu', args=args)
+    elif 'major_name' in keys:
+        results = cursor.callproc('insertmajor', args=args)
+    elif 'course_name' in keys:
+        results = cursor.callproc('insertcm', args=args)
+    elif 'grade' in keys:
+        results = cursor.callproc('insertcg', args=args)
 
     status = results[-1]
     if status:
@@ -232,6 +315,10 @@ def get_one_info():
         tableName = 'major'
         row_id = requ['major_id']
         primes = ['major_id']
+    elif 'course_id' in requ:
+        tableName = 'coursemanagement'
+        row_id = requ['course_id']
+        primes = ['course_id']
     cursor.execute('desc ' + tableName)
     Description = cursor.fetchall()
     header = [col[0] for col in Description]
@@ -296,6 +383,44 @@ def login():
         return render_template('login.html', error_msg='登录失败，请检查用户名和密码是否正确')
 
     return render_template('login.html')
+
+
+@app.route('/select-stu', methods=['POST'])
+def render_select():
+    cursor = cnx.cursor()
+    requ = request.get_json()
+    sid = requ['student_id']
+    print(sid)
+    if sid == '':
+        query = ''
+    else:
+        query = " where student_id like '%%%s%%' " % sid
+    print(query)
+    cursor.execute('select student_id, name from student_info ' + query)
+    students = cursor.fetchall()
+    sids = [clazz[0] for clazz in students]
+    students = ['\t'.join(map(str, clazz)) for clazz in students]
+    students = dict(zip(sids, students))
+    return render_template('selector_stu.html', students=students)
+
+
+@app.route('/select-course', methods=['POST'])
+def render_course():
+    cursor = cnx.cursor()
+    requ = request.get_json()
+    sid = requ['course_id']
+    print(sid)
+    if sid == '':
+        query = ''
+    else:
+        query = " where course_id like '%%%s%%' " % sid
+    print(query)
+    cursor.execute('select course_id, course_name from coursemanagement ' + query)
+    courses = cursor.fetchall()
+    sids = [clazz[0] for clazz in courses]
+    courses = ['\t'.join(map(str, clazz)) for clazz in courses]
+    courses = dict(zip(sids, courses))
+    return render_template('selector_course.html', courses=courses)
 
 
 @app.route('/contact', )

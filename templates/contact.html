@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>开课信息</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/fcicon.css">
+</head>
+<body>
+<input type="number" id="myInput" class="form-control" placeholder="请输入内容">
+<div class="container" id="select-container">
+
+</div>
+<script>
+    // 获取输入框元素
+    var input = document.getElementById('myInput');
+    const selectStu = document.querySelector('#select-container');
+    // 添加输入事件监听器
+    input.addEventListener('input', function (event) {
+        // 当内容发生变化时触发的代码
+        console.log('内容已更改:', event.target.value);
+        fetch('/select-stu', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({student_id: event.target.value})
+        })
+            .then(response => response.text())
+            .then(data => {
+                // 将返回的数据插入表格容器中
+                selectStu.innerHTML = data;
+            })
+            .catch(error => console.error(error));
+    });
+
+</script>
+</body>
+</html>

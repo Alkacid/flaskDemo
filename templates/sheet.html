@@ -5,7 +5,9 @@
         {% for column in header %}
             <th data-sort-order="asc"> {{ headername[column] }}</th>
         {% endfor %}
-        <th>操作</th>
+        {% if editable or deletable %}
+            <th>操作</th>
+        {% endif %}
     </tr>
     </thead>
     <tbody id="tableBody">
@@ -14,22 +16,26 @@
             {% for column in row %}
                 <td>{{ column }}</td>
             {% endfor %}
-            <td>
-                <button type="button" id="{{ row[0] }}Edit" class="btn btn-outline-primary "
-                        data-bs-toggle="modal"
-                        onclick="get_info(this)"
-                        data-bs-target="#editModal" style="width: fit-content; ">
-                    编辑
-                </button>
-                {% if deletable %}
-                    <button type="button" id="{{ row[0] }}Delete" class="btn btn-outline-danger"
-                            data-bs-toggle="modal"
-                            onclick="delete_one(this)"
-                            data-bs-target="#deleteModal" style="width: fit-content; ">
-                        删除
-                    </button>
-                {% endif %}
-            </td>
+            {% if editable or deletable %}
+                <td>
+                    {% if editable %}
+                        <button type="button" id="{{ row[0] }}Edit" class="btn btn-outline-primary "
+                                data-bs-toggle="modal"
+                                onclick="get_info(this)"
+                                data-bs-target="#editModal" style="width: fit-content; ">
+                            编辑
+                        </button>
+                    {% endif %}
+                    {% if deletable %}
+                        <button type="button" id="{{ row[0] }}Delete" class="btn btn-outline-danger"
+                                data-bs-toggle="modal"
+                                onclick="delete_one(this)"
+                                data-bs-target="#deleteModal" style="width: fit-content; ">
+                            删除
+                        </button>
+                    {% endif %}
+                </td>
+            {% endif %}
         </tr>
     {% endfor %}
     </tbody>

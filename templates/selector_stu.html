@@ -1,0 +1,5 @@
+<select class="form-select" name="student_id" id="sid">
+    {% for sid in students %}
+        <option value={{ sid }}>{{ students[sid] }}</option>
+    {% endfor %}
+</select>

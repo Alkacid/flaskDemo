@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>专业信息</title>
+    <title>成绩信息</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/css/bootstrap.css">
     <link rel="stylesheet" href="/static/css/fcicon.css">
@@ -54,7 +54,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link  active" aria-current="page">
+                    <a href="/major" class="nav-link " aria-current="page">
                         专业信息
                     </a>
                 </li>
@@ -69,7 +69,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link " aria-current="page">
+                    <a href="#" class="nav-link active" aria-current="page">
                         选课与成绩信息
                     </a>
                 </li>
@@ -80,14 +80,17 @@
         <div class="container ">
             <div class=" container mt-3" style="width: 100%">
                 <form class="d-flex justify-content-center" action="#" method="post" id="sortForm">
-
-                    <div class="input-group" style="width: fit-content;margin-left: 5px">
-                        <span class="input-group-text">专业编号</span>
-                        <input type="text" class="form-control" id="major_id" name="major_id">
+                    <div class="input-group " style="width: auto; margin-left: 5px">
+                        <span class="input-group-text">记录ID</span>
+                        <input type="text" class="form-control" id="grade_record_id" name="grade_record_id">
                     </div>
                     <div class="input-group" style="width: fit-content;margin-left: 5px">
-                        <span class="input-group-text">专业名称</span>
-                        <input type="text" class="form-control" id="major_name" name="major_name">
+                        <span class="input-group-text">学号</span>
+                        <input type="text" class="form-control" id="student_id" name="student_id">
+                    </div>
+                    <div class="input-group" style="width: fit-content;margin-left: 5px">
+                        <span class="input-group-text">姓名</span>
+                        <input type="text" class="form-control" id="name" name="name">
                     </div>
                     <div style="width: fit-content;margin-left: 5px">
                         <select name="sortItem" id="sortItem" class="form-select"
@@ -108,14 +111,14 @@
                         <button type="submit" class="btn btn-primary">查询</button>
                     </div>
                     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
-                            data-bs-target="#insertModal" style="width: fit-content; margin-left: 40px ">
+                            data-bs-target="#insertModal" style="width: fit-content; margin-left: 40px">
                         新建
                     </button>
                 </form>
 
             </div>
             {#数据表：body分离#}
-            <div class="container mt-3" style="width: 70%" id="table-container">
+            <div class="container mt-3" style="width: 85%" id="table-container">
 
                 {{ sheet_html|safe }}
 
@@ -123,70 +126,6 @@
         </div>
     </div>
 </div>
-<div class="modal" id="deleteModal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title">删除</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <h2>确认删除？</h2>
-            </div>
-            <div class="modal-footer">
-                <div class="d-flex justify-content-end">
-                    <button type="submit" id="deleteBtn" class="btn btn-primary">删除</button>
-                    <button type="button" class="btn btn-danger" style="margin-left: 5px" data-bs-dismiss="modal">
-                        关闭
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-</div>
-<form action="#" method="post" id="editForm">
-    <div class="modal fade" id="editModal">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">编辑</h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    {% for column, type in zip(header,colType) %}
-                        <div class="input-group" style="width:100%; margin-bottom: 5px">
-                            <span class="input-group-text">{{ headername[column] }}</span>
-                            {% if type[0] %} <!-- 整数 -->
-                                <input type="number" class="form-control" id="{{ column }}Edit" title="请输入整数"
-                                       name={{ column }}>
-                            {% elif type[1] %} <!-- 浮点数 -->
-                                <input type="text" pattern="\d+(\.\d+)?" class="form-control"
-                                       title="请输入浮点数或整数"
-                                       id="{{ column }}Edit" name={{ column }}>
-                            {% elif type[2] %} <!-- 日期 -->
-                                <input type="date" class="form-control" id="{{ column }}Edit" name={{ column }}>
-                            {% else %} <!-- 字符串 -->
-                                <input type="text" class="form-control" id="{{ column }}Edit" name={{ column }}>
-                            {% endif %}
-                        </div>
-
-                    {% endfor %}
-
-                </div>
-                <div class="modal-footer">
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary">修改</button>
-                        <button type="button" class="btn btn-danger" style="margin-left: 5px" data-bs-dismiss="modal">
-                            关闭
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-</form>
 <form action="#" method="post" id="insertForm">
     <div class="modal fade" id="insertModal">
         <div class="modal-dialog">
@@ -196,23 +135,25 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    {% for column, type in zip(header,colType) %}
-                        <div class="input-group" style="width:100%; margin-bottom: 5px">
-                            <span class="input-group-text">{{ headername[column] }}</span>
-                            {% if type[0] %} <!-- 整数 -->
-                                <input type="number" class="form-control" id="{{ column }}Insert" title="请输入整数"
-                                       name={{ column }}>
-                            {% elif type[1] %} <!-- 浮点数 -->
-                                <input type="text" pattern="\d+(\.\d+)?" class="form-control"
-                                       title="请输入浮点数或整数"
-                                       id="{{ column }}Insert" name={{ column }}>
-                            {% elif type[2] %} <!-- 日期 -->
-                                <input type="date" class="form-control" id="{{ column }}Insert" name={{ column }}>
-                            {% else %} <!-- 字符串 -->
-                                <input type="text" class="form-control" id="{{ column }}Insert" name={{ column }}>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
+
+                    <div class="input-group" style="width:100%; margin-bottom: 5px">
+                        <span class="input-group-text">学号</span>
+                        <input type="number" id="student_idInsert" class="form-control">
+                    </div>
+                    <div class="container" id="sid-select" style="width:100%; margin-bottom: 5px">
+
+                    </div>
+                    <div class="input-group" style="width:100%; margin-bottom: 5px">
+                        <span class="input-group-text">课程号</span>
+                        <input type="number" id="course_idInsert" class="form-control">
+                    </div>
+                    <div class="container" id="course-select" style="width:100%; margin-bottom: 5px">
+
+                    </div>
+                    <div class="input-group" style="width:100%; margin-bottom: 5px">
+                        <span class="input-group-text">成绩</span>
+                        <input type="number" id="gradeInsert" class="form-control" name="grade">
+                    </div>
 
                 </div>
                 <div class="modal-footer">
@@ -228,7 +169,52 @@
         </div>
     </div>
 </form>
-
+<script>
+    // 获取输入框元素
+    var input1 = document.getElementById('student_idInsert');
+    const selectStu = document.querySelector('#sid-select');
+    // 添加输入事件监听器
+    input1.addEventListener('input', function (event) {
+        // 当内容发生变化时触发的代码
+        console.log('内容已更改:', event.target.value);
+        fetch('/select-stu', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({student_id: event.target.value})
+        })
+            .then(response => response.text())
+            .then(data => {
+                // 将返回的数据插入表格容器中
+                selectStu.innerHTML = data;
+            })
+            .catch(error => console.error(error));
+    });
+</script>
+<script>
+    // 获取输入框元素
+    var input2 = document.getElementById('course_idInsert');
+    const selectCourse = document.querySelector('#course-select');
+    // 添加输入事件监听器
+    input2.addEventListener('input', function (event) {
+        // 当内容发生变化时触发的代码
+        console.log('内容已更改:', event.target.value);
+        fetch('/select-course', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({course_id: event.target.value})
+        })
+            .then(response => response.text())
+            .then(data => {
+                // 将返回的数据插入表格容器中
+                selectCourse.innerHTML = data;
+            })
+            .catch(error => console.error(error));
+    });
+</script>
 <script>
     const formInsert = document.querySelector('#insertForm')
     // 监听表单提交事件
@@ -255,26 +241,6 @@
     });
 </script>
 <script>
-    const formEdit = document.querySelector('#editForm');
-    formEdit.addEventListener('submit', e => {
-        e.preventDefault();
-        const editData = new FormData(formEdit);
-        fetch('/edit-table', {
-            method: 'POST',
-            body: editData
-        }).then(response => response.text())
-            .then(status => {
-                console.log(status)
-                if (status) {
-                    alert(status);
-                }
-
-            })
-            .catch(error => console.error(error));
-
-    })
-</script>
-<script>
     // 获取表单和表格容器
     const form = document.querySelector('#sortForm');
     const tableContainer = document.querySelector('#table-container');
@@ -299,39 +265,6 @@
             .catch(error => console.error(error));
     });
 
-</script>
-<script>
-    function get_info(btn) {
-        var id = btn.id; // 获取当前按钮的id
-        console.log(id);
-        var row_id = id.slice(0, -4); // 去掉末尾的 Edit，得到行的id
-        // 在这里根据 row_id 获取当前行的信息，并将信息填入到模态框中
-
-        fetch('/get-one-info', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({major_id: row_id}) // 将 row_id 作为请求体发送到后端
-        })
-            .then(function (response) {
-                return response.json();
-            })
-            .then(function (data) {
-                    const info = data.info;
-                    const primes = data.primes;
-                    for (var key in info) {
-                        $('#' + key + 'Edit').val(info[key]);
-                        if (primes.includes(key)) {
-                            $('#' + key + 'Edit').attr('readonly', true)
-                        }
-                    }
-                }
-            )
-            .catch(function (error) {
-                console.log(error);
-            });
-    }
 </script>
 </body>
 </html>
