@@ -24,7 +24,7 @@ usersql = {
 cnx = mysql.connector.connect(**config)
 app = Flask(__name__)
 
-headername = {'record_id': '记录ID', 'student_id': '学号', 'reason': '奖惩类型', 'type': '奖惩类型',
+headername = {'record_id': '记录ID', 'student_id': '学号', 'reason': '奖惩原因', 'type': '奖惩类型',
               'aap_date': '记录日期', 'class_id': '班级号', 'class_teacher': '班主任', 'class_name': '班级名',
               'college_id': '学院id',
               'college_name': '开课学院名称', 'grade_record_id': '成绩记录id', 'course_id': '课程号', 'grade': '分数',
@@ -87,11 +87,6 @@ def table():
     data = cursor.fetchall()
 
     header, colType = get_header_and_types(Description)
-    # header = [col[0] for col in Description]
-    # isInt = ['int' in str(col[1]) for col in Description]
-    # isFloat = ['float' in str(col[1]) for col in Description]
-    # isDate = ['date' in str(col[1]) for col in Description]
-    # colType = list(zip(isInt, isFloat, isDate))
 
     cursor.execute('select * from class')
     classes = cursor.fetchall()
@@ -183,6 +178,24 @@ def coursegrades():
                            zip=zip)
 
 
+@app.route('/awards')
+def awards():
+    cursor = cnx.cursor()
+    cursor.execute("describe awards_info")
+    Description = cursor.fetchall()
+    query = 'select * from awards_info'
+    cursor.execute(query)
+    data = cursor.fetchall()
+
+    header, colType = get_header_and_types(Description)
+
+    sheet_html = render_sheet(header, headername, data, deletable=True, editable=True)
+    print(header)
+    return render_template('awards.html', sheet_html=sheet_html, header=header, headername=headername,
+                           colType=colType,
+                           zip=zip)
+
+
 def create_mysql_search(formData, tableName):
     sortItem = formData['sortItem']
     sortDirect = formData['sortDirect']
@@ -232,6 +245,10 @@ def get_table_data():
         tableName = 'grade_info'
         deletable = True
         editable = True
+    elif 'record_id' in keys:
+        tableName = 'awards_info'
+        deletable = True
+        editable = True
     elif 'name' in keys:
         tableName = 'student_info'
         deletable = True
@@ -268,7 +285,10 @@ def edit_table():
         status = cursor.callproc('editmajor', args=args)
     elif 'course_name' in keys:
         status = cursor.callproc('editcm', args=args)
-
+    elif 'grade' in keys:
+        status = cursor.callproc('editcg', args=args)
+    elif 'reason' in keys:
+        status = cursor.callproc('editaward', args=args)
     status = status[-1]
     if status:
         return 'OK'
@@ -293,6 +313,8 @@ def insert_table():
         results = cursor.callproc('insertcm', args=args)
     elif 'grade' in keys:
         results = cursor.callproc('insertcg', args=args)
+    elif 'reason' in keys:
+        results = cursor.callproc('insertaward', args=args)
 
     status = results[-1]
     if status:
@@ -319,6 +341,14 @@ def get_one_info():
         tableName = 'coursemanagement'
         row_id = requ['course_id']
         primes = ['course_id']
+    elif 'grade_record_id' in requ:
+        tableName = 'grade_info'
+        row_id = requ['grade_record_id']
+        primes = ['grade_record_id', 'student_id', 'course_id']
+    elif 'record_id' in requ:
+        tableName = 'awards_info'
+        row_id = requ['record_id']
+        primes = ['record_id', 'student_id']
     cursor.execute('desc ' + tableName)
     Description = cursor.fetchall()
     header = [col[0] for col in Description]
@@ -352,6 +382,12 @@ def delete_one():
         row_id = requ['student_id']
         print(row_id)
         status = cursor.callproc('delstu', args=(row_id, ''))
+    elif 'grade_record_id' in requ:
+        row_id = requ['grade_record_id']
+        status = cursor.callproc('delcg', args=(row_id, ''))
+    elif 'record_id' in requ:
+        row_id = requ['record_id']
+        status = cursor.callproc('delaward', args=(row_id, ''))
 
     if status[-1]:
         return 'OK'
@@ -391,10 +427,10 @@ def render_select():
     requ = request.get_json()
     sid = requ['student_id']
     print(sid)
-    if sid == '':
+    if sid == '' or "'" in sid:
         query = ''
     else:
-        query = " where student_id like '%%%s%%' " % sid
+        query = " where student_id like '%%%s%%' or name like '%%%s%%' " % (sid, sid)
     print(query)
     cursor.execute('select student_id, name from student_info ' + query)
     students = cursor.fetchall()
@@ -410,10 +446,10 @@ def render_course():
     requ = request.get_json()
     sid = requ['course_id']
     print(sid)
-    if sid == '':
+    if sid == '' or "'" in sid:
         query = ''
     else:
-        query = " where course_id like '%%%s%%' " % sid
+        query = " where course_id like '%%%s%%' or course_name like '%%%s%%' " % (sid, sid)
     print(query)
     cursor.execute('select course_id, course_name from coursemanagement ' + query)
     courses = cursor.fetchall()

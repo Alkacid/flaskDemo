@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>成绩信息</title>
+    <title>学生奖惩信息</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/css/bootstrap.css">
     <link rel="stylesheet" href="/static/css/fcicon.css">
@@ -69,12 +69,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link active" aria-current="page">
+                    <a href="/coursegrades" class="nav-link" aria-current="page">
                         选课与成绩信息
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="/awards" class="nav-link" aria-current="page">
+                    <a href="#" class="nav-link active" aria-current="page">
                         学生奖惩信息
                     </a>
                 </li>
@@ -87,7 +87,7 @@
                 <form class="d-flex justify-content-center" action="#" method="post" id="sortForm">
                     <div class="input-group " style="width: auto; margin-left: 5px">
                         <span class="input-group-text">记录ID</span>
-                        <input type="text" class="form-control" id="grade_record_id" name="grade_record_id">
+                        <input type="text" class="form-control" id="record_id" name="record_id">
                     </div>
                     <div class="input-group" style="width: fit-content;margin-left: 5px">
                         <span class="input-group-text">学号</span>
@@ -141,24 +141,36 @@
                 </div>
                 <div class="modal-body">
 
-                    <div class="input-group" style="width:100%; margin-bottom: 5px">
-                        <span class="input-group-text">学号</span>
-                        <input type="text" id="student_idInsert" class="form-control">
-                    </div>
-                    <div class="container" id="sid-select" style="width:100%; margin-bottom: 5px">
 
-                    </div>
-                    <div class="input-group" style="width:100%; margin-bottom: 5px">
-                        <span class="input-group-text">课程号</span>
-                        <input type="text" id="course_idInsert" class="form-control">
-                    </div>
-                    <div class="container" id="course-select" style="width:100%; margin-bottom: 5px">
+                    {% for column, type in zip(header,colType) %}
+                        {% if column == 'record_id' or column=='name' %}
+                            {#continue#}
+                        {% elif column=='student_id' %}
+                            <div class="input-group" style="width:100%; margin-bottom: 5px">
+                                <span class="input-group-text">学号</span>
+                                <input type="text" id="student_idInsert" class="form-control">
+                            </div>
+                            <div class="container" id="sid-select" style="width:100%; margin-bottom: 5px">
 
-                    </div>
-                    <div class="input-group" style="width:100%; margin-bottom: 5px">
-                        <span class="input-group-text">成绩</span>
-                        <input type="number" id="gradeInsert" class="form-control" name="grade">
-                    </div>
+                            </div>
+                        {% else %}
+                            <div class="input-group" style="width:100%; margin-bottom: 5px">
+                                <span class="input-group-text">{{ headername[column] }}</span>
+                                {% if type[0] %} <!-- 整数 -->
+                                    <input type="number" class="form-control" id="{{ column }}Insert" title="请输入整数"
+                                           name={{ column }}>
+                                {% elif type[1] %} <!-- 浮点数 -->
+                                    <input type="text" pattern="\d+(\.\d+)?" class="form-control"
+                                           title="请输入浮点数或整数"
+                                           id="{{ column }}Insert" name={{ column }}>
+                                {% elif type[2] %} <!-- 日期 -->
+                                    <input type="date" class="form-control" id="{{ column }}Insert" name={{ column }}>
+                                {% else %} <!-- 字符串 -->
+                                    <input type="text" class="form-control" id="{{ column }}Insert" name={{ column }}>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
 
                 </div>
                 <div class="modal-footer">
@@ -206,7 +218,7 @@
                 </div>
                 <div class="modal-body">
                     {% for column, type in zip(header,colType) %}
-                        {% if 'name' in column or 'record' in column %}
+                        {% if 'name' in column %}
                             <div class="input-group" style="width:100%; margin-bottom: 5px">
                                 <span class="input-group-text">{{ headername[column] }}</span>
                                 <input type="text" class="form-control" id="{{ column }}Edit" readonly>
@@ -265,7 +277,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({grade_record_id: row_id_to_delete}) // 将 row_id 作为请求体发送到后端
+                body: JSON.stringify({record_id: row_id_to_delete}) // 将 row_id 作为请求体发送到后端
             })
                 .then(function (response) {
                     return response.text();
@@ -309,29 +321,7 @@
             .catch(error => console.error(error));
     });
 </script>
-<script>
-    // 获取输入框元素
-    var input2 = document.getElementById('course_idInsert');
-    const selectCourse = document.querySelector('#course-select');
-    // 添加输入事件监听器
-    input2.addEventListener('input', function (event) {
-        // 当内容发生变化时触发的代码
-        console.log('内容已更改:', event.target.value);
-        fetch('/select-course', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({course_id: event.target.value})
-        })
-            .then(response => response.text())
-            .then(data => {
-                // 将返回的数据插入表格容器中
-                selectCourse.innerHTML = data;
-            })
-            .catch(error => console.error(error));
-    });
-</script>
+
 <script>
     const formInsert = document.querySelector('#insertForm')
     // 监听表单提交事件
@@ -389,7 +379,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({grade_record_id: row_id}) // 将 row_id 作为请求体发送到后端
+            body: JSON.stringify({record_id: row_id}) // 将 row_id 作为请求体发送到后端
         })
             .then(function (response) {
                 return response.json();
