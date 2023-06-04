@@ -140,18 +140,16 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-
-
                     {% for column, type in zip(header,colType) %}
                         {% if column == 'record_id' or column=='name' %}
                             {#continue#}
                         {% elif column=='student_id' %}
                             <div class="input-group" style="width:100%; margin-bottom: 5px">
-                                <span class="input-group-text">学号</span>
+                                <span class="input-group-text">学号/姓名</span>
                                 <input type="text" id="student_idInsert" class="form-control">
                             </div>
                             <div class="container" id="sid-select" style="width:100%; margin-bottom: 5px">
-
+                                {# placeholder#}
                             </div>
                         {% else %}
                             <div class="input-group" style="width:100%; margin-bottom: 5px">

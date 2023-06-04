@@ -1,5 +1,5 @@
 <table class="table table-striped table-bordered table-hover"
-       style="width: 95%; table-layout: auto; margin: auto auto" id="table">
+       style="width: 95%; table-layout: auto; margin: auto auto; " id="table">
     <thead>
     <tr>
         {% for column in header %}
@@ -14,7 +14,7 @@
     {% for row in data %}
         <tr>
             {% for column in row %}
-                <td>{{ column }}</td>
+                <td style="vertical-align: middle">{{ column }}</td>
             {% endfor %}
             {% if editable or deletable %}
                 <td>
