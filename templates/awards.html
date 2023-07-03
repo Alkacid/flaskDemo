@@ -44,7 +44,7 @@
         <nav class="navbar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark">
             <ul class="nav nav-pills flex-column  mb-auto">
                 <div class="align-items-center  d-flex flex-column ">
-                    <i class="fc-icon-ustc fc-icon-zhongda"></i>
+                    <i class="fc-icon-ustc fc-icon-zhongda" style="margin-bottom: 6px"></i>
                     <span class="fs-4">学生管理系统</span>
                 </div>
                 <hr>
@@ -79,6 +79,11 @@
                     </a>
                 </li>
             </ul>
+            <div class="dropdown">
+                <hr>
+                <div><strong>当前用户: {{ usernow }}</strong></div>
+                <a href="/">退出登录</a>
+            </div>
         </nav>
     </div>
     <div class="" style="width: 85%">
@@ -90,12 +95,22 @@
                         <input type="text" class="form-control" id="record_id" name="record_id">
                     </div>
                     <div class="input-group" style="width: fit-content;margin-left: 5px">
-                        <span class="input-group-text">学号</span>
-                        <input type="text" class="form-control" id="student_id" name="student_id">
+                        {% if root %}
+                            <span class="input-group-text">学号</span>
+                            <input type="text" class="form-control" id="student_id" name="student_id">
+                        {% else %}
+                            <span class="input-group-text">奖惩类型</span>
+                            <input type="text" class="form-control" id="type" name="type">
+                        {% endif %}
                     </div>
                     <div class="input-group" style="width: fit-content;margin-left: 5px">
-                        <span class="input-group-text">姓名</span>
-                        <input type="text" class="form-control" id="name" name="name">
+                        {% if root %}
+                            <span class="input-group-text">姓名</span>
+                            <input type="text" class="form-control" id="name" name="name">
+                        {% else %}
+                            <span class="input-group-text">奖惩原因</span>
+                            <input type="text" class="form-control" id="reason" name="reason">
+                        {% endif %}
                     </div>
                     <div style="width: fit-content;margin-left: 5px">
                         <select name="sortItem" id="sortItem" class="form-select"
@@ -115,10 +130,12 @@
                     <div class="" style="margin-left: 5px;">
                         <button type="submit" class="btn btn-primary">查询</button>
                     </div>
-                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
-                            data-bs-target="#insertModal" style="width: fit-content; margin-left: 40px">
-                        新建
-                    </button>
+                    {% if root %}
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
+                                data-bs-target="#insertModal" style="width: fit-content; margin-left: 40px">
+                            新建
+                        </button>
+                    {% endif %}
                 </form>
 
             </div>
@@ -155,16 +172,19 @@
                             <div class="input-group" style="width:100%; margin-bottom: 5px">
                                 <span class="input-group-text">{{ headername[column] }}</span>
                                 {% if type[0] %} <!-- 整数 -->
-                                    <input type="number" class="form-control" id="{{ column }}Insert" title="请输入整数"
+                                    <input type="number" required class="form-control" id="{{ column }}Insert"
+                                           title="请输入整数"
                                            name={{ column }}>
                                 {% elif type[1] %} <!-- 浮点数 -->
-                                    <input type="text" pattern="\d+(\.\d+)?" class="form-control"
+                                    <input type="text" required pattern="\d+(\.\d+)?" class="form-control"
                                            title="请输入浮点数或整数"
                                            id="{{ column }}Insert" name={{ column }}>
                                 {% elif type[2] %} <!-- 日期 -->
-                                    <input type="date" class="form-control" id="{{ column }}Insert" name={{ column }}>
+                                    <input type="date" required class="form-control" id="{{ column }}Insert"
+                                           name={{ column }}>
                                 {% else %} <!-- 字符串 -->
-                                    <input type="text" class="form-control" id="{{ column }}Insert" name={{ column }}>
+                                    <input type="text" required class="form-control" id="{{ column }}Insert"
+                                           name={{ column }}>
                                 {% endif %}
                             </div>
                         {% endif %}
@@ -184,7 +204,7 @@
         </div>
     </div>
 </form>
-<div class="modal" id="deleteModal">
+<div class="modal fade" id="deleteModal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">

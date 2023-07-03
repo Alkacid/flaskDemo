@@ -44,7 +44,7 @@
         <nav class="navbar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark">
             <ul class="nav nav-pills flex-column  mb-auto">
                 <div class="align-items-center  d-flex flex-column ">
-                    <i class="fc-icon-ustc fc-icon-zhongda"></i>
+                    <i class="fc-icon-ustc fc-icon-zhongda" style="margin-bottom: 6px"></i>
                     <span class="fs-4">学生管理系统</span>
                 </div>
                 <hr>
@@ -79,42 +79,49 @@
                     </a>
                 </li>
             </ul>
+            <div class="dropdown">
+                <hr>
+                <div><strong>当前用户: {{ usernow }}</strong></div>
+                <a href="/">退出登录</a>
+            </div>
         </nav>
     </div>
     <div class="" style="width: 85%">
         <div class="container ">
             <div class=" container mt-3" style="width: 100%">
                 <form class="d-flex justify-content-center" action="#" method="post" id="sortForm">
-                    <div class="input-group" style="width: fit-content;margin-left: 5px">
-                        <span class="input-group-text">记录ID</span>
-                        <input type="text" class="form-control" id="major_record_id" name="major_record_id">
-                    </div>
-                    <div class="input-group" style="width: fit-content;margin-left: 5px">
-                        <span class="input-group-text">学号</span>
-                        <input type="text" class="form-control" id="student_id" name="student_id">
-                    </div>
-                    <div class="input-group" style="width: fit-content;margin-left: 5px">
-                        <span class="input-group-text">姓名</span>
-                        <input type="text" class="form-control" id="name" name="name">
-                    </div>
-                    <div style="width: fit-content;margin-left: 5px">
-                        <select name="sortItem" id="sortItem" class="form-select"
-                                aria-label="Default select example">
-                            <option selected value="default">默认排序</option>
-                            {% for column in header %}
-                                <option value="{{ column }}">{{ headername[column] }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div style="width: fit-content;margin-left: 5px">
-                        <select name="sortDirect" id="sortDirect" class="form-select">
-                            <option value="ASC">正序</option>
-                            <option value="DESC">逆序</option>
-                        </select>
-                    </div>
-                    <div class="" style="margin-left: 5px;">
-                        <button type="submit" class="btn btn-primary">查询</button>
-                    </div>
+                    {% if root %}
+                        <div class="input-group" style="width: fit-content;margin-left: 5px">
+                            <span class="input-group-text">记录ID</span>
+                            <input type="text" class="form-control" id="major_record_id" name="major_record_id">
+                        </div>
+                        <div class="input-group" style="width: fit-content;margin-left: 5px">
+                            <span class="input-group-text">学号</span>
+                            <input type="text" class="form-control" id="student_id" name="student_id">
+                        </div>
+                        <div class="input-group" style="width: fit-content;margin-left: 5px">
+                            <span class="input-group-text">姓名</span>
+                            <input type="text" class="form-control" id="name" name="name">
+                        </div>
+                        <div style="width: fit-content;margin-left: 5px">
+                            <select name="sortItem" id="sortItem" class="form-select"
+                                    aria-label="Default select example">
+                                <option selected value="default">默认排序</option>
+                                {% for column in header %}
+                                    <option value="{{ column }}">{{ headername[column] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div style="width: fit-content;margin-left: 5px">
+                            <select name="sortDirect" id="sortDirect" class="form-select">
+                                <option value="ASC">正序</option>
+                                <option value="DESC">逆序</option>
+                            </select>
+                        </div>
+                        <div class="" style="margin-left: 5px;">
+                            <button type="submit" class="btn btn-primary">查询</button>
+                        </div>
+                    {% endif %}
                 </form>
 
             </div>

@@ -13,17 +13,11 @@ config = {
     'database': 'stu',
     'raise_on_warnings': True
 }
-usersql = {
-    'user': 'root',
-    'password': '+654',
-    'host': 'localhost',
-    'database': 'edu_manage',
-    'raise_on_warnings': True
-}
 
 cnx = mysql.connector.connect(**config)
 app = Flask(__name__)
-
+root = False
+usernow = 0
 headername = {'record_id': '记录ID', 'student_id': '学号', 'reason': '奖惩原因', 'type': '奖惩类型',
               'aap_date': '记录日期', 'class_id': '班级号', 'class_teacher': '班主任', 'class_name': '班级名',
               'college_id': '学院id',
@@ -40,31 +34,9 @@ headername = {'record_id': '记录ID', 'student_id': '学号', 'reason': '奖惩
               }
 
 
-@app.route('/register', methods=['POST', 'GET'])
-def register():
-    if request.method == 'POST':
-
-        userdata = mysql.connector.connect(**usersql)
-        username = request.form['username']
-        password = request.form['password']
-
-        # 生成唯一的 salt 值
-        salt = os.urandom(16).hex()
-        hashed_password = hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
-        cursor = userdata.cursor()
-        cursor.execute(
-            "INSERT INTO user (username, password, salt) VALUES ( '%s', '%s', '%s');" % (username, hashed_password,
-                                                                                         salt))
-        userdata.commit()
-        cursor.close()
-        return redirect('/')
-    else:
-        return render_template('register.html')
-
-
 def render_sheet(header, headername, data, deletable, editable):
     return render_template('sheet.html', headername=headername, header=header, data=data, deletable=deletable,
-                           editable=editable)
+                           editable=editable, root=root)
 
 
 def get_header_and_types(Description):
@@ -81,30 +53,37 @@ def table():
     cursor = cnx.cursor()
     cursor.execute("describe student_info")
     Description = cursor.fetchall()
-
-    query = 'select * from student_info'
-    cursor.execute(query)
-    data = cursor.fetchall()
-
     header, colType = get_header_and_types(Description)
+    if root:
+        query = 'select * from student_info'
+        cursor.execute(query)
+        data = cursor.fetchall()
 
-    cursor.execute('select * from class')
-    classes = cursor.fetchall()
-    class_ids = [clazz[0] for clazz in classes]
-    classes = ['\t'.join(map(str, clazz)) for clazz in classes]
-    classes = dict(zip(class_ids, classes))
-    # print(classes)
+        cursor.execute('select * from class')
+        classes = cursor.fetchall()
+        class_ids = [clazz[0] for clazz in classes]
+        classes = ['\t'.join(map(str, clazz)) for clazz in classes]
+        classes = dict(zip(class_ids, classes))
+        # print(classes)
 
-    cursor.execute('select * from major')
-    majors = cursor.fetchall()
-    major_ids = [major[0] for major in majors]
-    majors = ['\t'.join(map(str, major)) for major in majors]
-    majors = dict(zip(major_ids, majors))
+        cursor.execute('select * from major')
+        majors = cursor.fetchall()
+        major_ids = [m[0] for m in majors]
+        majors = ['\t'.join(map(str, m)) for m in majors]
+        majors = dict(zip(major_ids, majors))
 
-    sheet_html = render_sheet(header, headername, data, deletable=True, editable=True)
+        sheet_html = render_sheet(header, headername, data, deletable=True, editable=True)
 
-    return render_template('table.html', sheet_html=sheet_html, header=header, headername=headername, colType=colType,
-                           zip=zip, majors=majors, classes=classes)
+        return render_template('table.html', sheet_html=sheet_html, header=header, headername=headername,
+                               colType=colType,
+                               zip=zip, majors=majors, classes=classes, usernow=usernow)
+
+    else:
+        query = 'select * from student_info where student_id= ' + usernow
+        cursor.execute(query)
+        data = list(cursor.fetchone())
+        return render_template('self_info.html', header=header, colType=colType, data=data, headername=headername,
+                               zip=zip, usernow=usernow)
 
 
 @app.route('/major')
@@ -117,11 +96,17 @@ def major():
     data = cursor.fetchall()
 
     header, colType = get_header_and_types(Description)
+    if root:
+        deletable = False
+        editable = True
+    else:
+        deletable = False
+        editable = False
 
-    sheet_html = render_sheet(header, headername, data, deletable=False, editable=True)
+    sheet_html = render_sheet(header, headername, data, deletable=deletable, editable=editable)
 
     return render_template('major.html', sheet_html=sheet_html, header=header, headername=headername, colType=colType,
-                           zip=zip)
+                           zip=zip, root=root, usernow=usernow)
 
 
 @app.route('/majorchange')
@@ -129,7 +114,10 @@ def majorchange():
     cursor = cnx.cursor()
     cursor.execute("describe major_change_info")
     Description = cursor.fetchall()
-    query = 'select * from major_change_info'
+    if root:
+        query = 'select * from major_change_info'
+    else:
+        query = 'select * from major_change_info where student_id= ' + usernow
     cursor.execute(query)
     data = cursor.fetchall()
 
@@ -138,8 +126,8 @@ def majorchange():
     sheet_html = render_sheet(header, headername, data, deletable=False, editable=False)
 
     return render_template('majorchange.html', sheet_html=sheet_html, header=header, headername=headername,
-                           colType=colType,
-                           zip=zip)
+                           colType=colType, root=root,
+                           zip=zip, usernow=usernow)
 
 
 @app.route('/coursemanage')
@@ -156,8 +144,8 @@ def coursemanage():
     sheet_html = render_sheet(header, headername, data, deletable=False, editable=True)
 
     return render_template('coursemanage.html', sheet_html=sheet_html, header=header, headername=headername,
-                           colType=colType,
-                           zip=zip)
+                           colType=colType, root=root,
+                           zip=zip, usernow=usernow)
 
 
 @app.route('/coursegrades')
@@ -165,17 +153,24 @@ def coursegrades():
     cursor = cnx.cursor()
     cursor.execute("describe grade_info")
     Description = cursor.fetchall()
-    query = 'select * from grade_info'
+    if root:
+        query = 'select * from grade_info'
+        deletable = True
+        editable = True
+    else:
+        query = 'select * from grade_info where student_id = ' + usernow
+        deletable = True
+        editable = False
     cursor.execute(query)
     data = cursor.fetchall()
 
     header, colType = get_header_and_types(Description)
 
-    sheet_html = render_sheet(header, headername, data, deletable=True, editable=True)
+    sheet_html = render_sheet(header, headername, data, deletable=deletable, editable=editable)
 
     return render_template('coursegrades.html', sheet_html=sheet_html, header=header, headername=headername,
-                           colType=colType,
-                           zip=zip)
+                           colType=colType, root=root,
+                           zip=zip, usernow=usernow)
 
 
 @app.route('/awards')
@@ -183,25 +178,34 @@ def awards():
     cursor = cnx.cursor()
     cursor.execute("describe awards_info")
     Description = cursor.fetchall()
-    query = 'select * from awards_info'
+    if root:
+        query = 'select * from awards_info'
+        deletable = True
+        editable = True
+    else:
+        query = 'select * from awards_info where student_id= ' + usernow
+        deletable = False
+        editable = False
+    print(query)
     cursor.execute(query)
     data = cursor.fetchall()
 
     header, colType = get_header_and_types(Description)
 
-    sheet_html = render_sheet(header, headername, data, deletable=True, editable=True)
-    print(header)
+    sheet_html = render_sheet(header, headername, data, deletable=deletable, editable=editable)
+
     return render_template('awards.html', sheet_html=sheet_html, header=header, headername=headername,
-                           colType=colType,
-                           zip=zip)
+                           colType=colType, root=root,
+                           zip=zip, usernow=usernow)
 
 
-def create_mysql_search(formData, tableName):
+def create_mysql_search(formData, tableName, stu=''):
     sortItem = formData['sortItem']
     sortDirect = formData['sortDirect']
     del formData['sortItem']
     del formData['sortDirect']
-    query = 'SELECT * FROM ' + tableName + ' WHERE 1 = 1 '
+    query = 'SELECT * FROM ' + tableName
+    query = query + (' WHERE 1 = 1 ' if stu == '' else (' where student_id=%s  ' % stu))
     for key in formData.keys():
         if 'Lower' in key:
             lowerbound = formData[key]
@@ -225,7 +229,7 @@ def create_mysql_search(formData, tableName):
             query = query + " and %s like '%%%s%%' " % (key, formData[key])
 
     if sortItem != 'default':
-        query = query + ' ORDER BY ' + sortItem + " " + sortDirect
+        query = query + ' ORDER BY convert( ' + sortItem + " using GBK) " + sortDirect
 
     return query
 
@@ -233,36 +237,40 @@ def create_mysql_search(formData, tableName):
 @app.route('/get-table-data', methods=['POST'])
 def get_table_data():
     formData = dict(request.form)
-    print(formData)
+    # print(formData)
     tableName = ''
     deletable = True
     keys = formData.keys()
-    if 'major_record_id' in keys:
+    stu = ''
+    if 'major_record_id' in keys:  # 专业变更
         tableName = 'major_change_info'
         deletable = False
         editable = False
-    elif 'grade_record_id' in keys:
+        stu = '' if root else usernow
+    elif 'grade_record_id' in keys:  # 成绩和选课
         tableName = 'grade_info'
         deletable = True
-        editable = True
-    elif 'record_id' in keys:
+        editable = True if root else False
+        stu = '' if root else usernow
+    elif 'record_id' in keys:  # 奖惩信息
         tableName = 'awards_info'
-        deletable = True
-        editable = True
-    elif 'name' in keys:
+        deletable = True if root else False
+        editable = True if root else False
+        stu = '' if root else usernow
+    elif 'name' in keys:  # 学生信息
         tableName = 'student_info'
         deletable = True
         editable = True
-    elif 'major_name' in keys:
+    elif 'major_name' in keys:  # 专业信息
         deletable = False
         tableName = 'major'
-        editable = True
-    elif 'course_name' in keys:
+        editable = True if root else False
+    elif 'course_name' in keys:  # 课程信息
         tableName = 'coursemanagement'
         deletable = False
         editable = True
     cursor = cnx.cursor()
-    query = create_mysql_search(formData, tableName)
+    query = create_mysql_search(formData, tableName, stu)
     print(query)
     cursor.execute(query)
     data = cursor.fetchall()
@@ -323,11 +331,25 @@ def insert_table():
         return '不OK'
 
 
+@app.route('/add-course', methods=['POST'])
+def add_course():
+    cursor = cnx.cursor()
+    requ = request.get_json()
+    course_id = requ['course_id']
+    args = [usernow, course_id, 0, '']
+    results = cursor.callproc('insertcg', args=args)
+    status = results[-1]
+    if status:
+        return 'OK'
+    else:
+        return '该课已被选中'
+
+
 @app.route('/get-one-info', methods=['POST'])
 def get_one_info():
     cursor = cnx.cursor()
     requ = request.get_json()
-    print(requ)
+    # print(requ)
     tableName = ''
     if 'student_id' in requ:
         tableName = 'student_info'
@@ -380,7 +402,7 @@ def delete_one():
     cursor = cnx.cursor()
     if 'student_id' in requ:
         row_id = requ['student_id']
-        print(row_id)
+        # print(row_id)
         status = cursor.callproc('delstu', args=(row_id, ''))
     elif 'grade_record_id' in requ:
         row_id = requ['grade_record_id']
@@ -395,43 +417,17 @@ def delete_one():
         return '不OK'
 
 
-@app.route('/', methods=['GET', 'POST'])
-def login():
-    return redirect('/table')
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        userdata = mysql.connector.connect(**usersql)
-        cursor = userdata.cursor()
-        cursor.execute("SELECT * FROM user WHERE username= '%s'" % username)
-        user = cursor.fetchone()
-
-        print(user)
-        if user:
-            columns = [desc[0] for desc in cursor.description]
-            # 将查询结果转换为字典类型
-            user = dict(zip(columns, user))
-            salt = user['salt']
-            hashed_password = hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
-            if hashed_password == user['password']:
-                return redirect('/table')
-
-        return render_template('login.html', error_msg='登录失败，请检查用户名和密码是否正确')
-
-    return render_template('login.html')
-
-
 @app.route('/select-stu', methods=['POST'])
 def render_select():
     cursor = cnx.cursor()
     requ = request.get_json()
     sid = requ['student_id']
-    print(sid)
+    # print(sid)
     if sid == '' or "'" in sid:
         query = ''
     else:
         query = " where student_id like '%%%s%%' or name like '%%%s%%' " % (sid, sid)
-    print(query)
+    # print(query)
     cursor.execute('select student_id, name from student_info ' + query)
     students = cursor.fetchall()
     sids = [clazz[0] for clazz in students]
@@ -445,12 +441,12 @@ def render_course():
     cursor = cnx.cursor()
     requ = request.get_json()
     sid = requ['course_id']
-    print(sid)
+    # print(sid)
     if sid == '' or "'" in sid:
         query = ''
     else:
         query = " where course_id like '%%%s%%' or course_name like '%%%s%%' " % (sid, sid)
-    print(query)
+    # print(query)
     cursor.execute('select course_id, course_name from coursemanagement ' + query)
     courses = cursor.fetchall()
     sids = [clazz[0] for clazz in courses]
@@ -464,5 +460,103 @@ def contact():
     return render_template('contact.html', header=[1, 2, 3, 4, 5])
 
 
+def create_mysql_chart(formData, tableName, stu=''):
+    sortItem = formData['sortItem']
+    sortDirect = formData['sortDirect']
+    del formData['sortItem']
+    del formData['sortDirect']
+    query = '''SELECT count(case when grade between 1 and 59 then 1 end) ,
+            count(case when grade between 60 and 69 then 1 end),
+            count(case when grade between 70 and 79 then 1 end),
+            count(case when grade between 80 and 89 then 1 end),
+            count(case when grade between 90 and 100 then 1 end)
+ FROM ''' + tableName
+    query = query + (' WHERE 1 = 1 ' if stu == '' else (' where student_id=%s  ' % stu))
+    for key in formData.keys():
+        if formData[key] == '':
+            continue
+        query = query + " and %s like '%%%s%%' " % (key, formData[key])
+
+    return query
+
+
+@app.route('/get-chart-data', methods=['POST'])
+def get_chart_data():
+    formData = dict(request.form)
+    cursor = cnx.cursor()
+    stu = '' if root else usernow
+    query = create_mysql_chart(formData, 'grade_info', stu)
+    print(query)
+    cursor.execute(query)
+    data = list(cursor.fetchone())
+    print(data)
+    return jsonify(data)
+
+
+@app.route('/register', methods=['POST', 'GET'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        cursor = cnx.cursor()
+
+        cursor.execute("select * from user where username = '%s'  " % username)
+        res = cursor.fetchone()
+        if res:
+            return render_template('register.html', error_msg='用户已被注册')
+
+        cursor.execute("select * from student_info where student_id= '%s'  " % username)
+        res = cursor.fetchall()
+        if not bool(res):
+            return render_template('register.html', error_msg='无学生信息')
+
+        # 生成唯一的 salt 值
+        salt = os.urandom(16).hex()
+        hashed_password = hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+
+        cursor.execute(
+            "INSERT INTO user (username, password, salt) VALUES ( '%s', '%s', '%s');" % (username, hashed_password,
+                                                                                         salt))
+        cnx.commit()
+        cursor.close()
+        return redirect('/')
+    else:
+        return render_template('register.html')
+
+
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    global root
+    global usernow
+    # return redirect('/coursegrades')
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        cursor = cnx.cursor()
+        query = "SELECT * FROM user WHERE username= '%s'" % username
+        print(query)
+        cursor.execute(query)
+        user = cursor.fetchone()
+
+        # print(user, end=' ')
+        if user:
+            columns = [desc[0] for desc in cursor.description]
+            user = dict(zip(columns, user))
+            salt = user['salt']
+            hashed_password = hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+            if hashed_password == user['password']:
+                if user['root']:
+                    root = True
+                else:
+                    root = False
+                usernow = username
+                # print(root)
+                return redirect('/table')
+
+        return render_template('login.html', error_msg='登录失败，请检查用户名和密码是否正确')
+
+    return render_template('login.html')
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=5000)

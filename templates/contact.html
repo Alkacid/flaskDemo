@@ -5,33 +5,29 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/css/bootstrap.css">
     <link rel="stylesheet" href="/static/css/fcicon.css">
+
 </head>
 <body>
-<input type="number" id="myInput" class="form-control" placeholder="请输入内容">
-<div class="container" id="select-container">
-
+<div style="width: 500px;height: 500px">
+    <canvas id="myChart"></canvas>
 </div>
-<script>
-    // 获取输入框元素
-    var input = document.getElementById('myInput');
-    const selectStu = document.querySelector('#select-container');
-    // 添加输入事件监听器
-    input.addEventListener('input', function (event) {
-        // 当内容发生变化时触发的代码
-        console.log('内容已更改:', event.target.value);
-        fetch('/select-stu', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({student_id: event.target.value})
-        })
-            .then(response => response.text())
-            .then(data => {
-                // 将返回的数据插入表格容器中
-                selectStu.innerHTML = data;
-            })
-            .catch(error => console.error(error));
+<script src="/static/js/chart.umd.js" type="module"></script>
+<script type="module">
+    var ctx = document.getElementById("myChart");
+    var data = {
+        datasets: [
+            {
+                data: [10, 20, 30]
+            }
+        ],
+
+        // These labels appear in the legend and in the tooltips when hovering different arcs
+        labels: ["Red", "Yellow", "Blue"]
+    };
+    var myDoughnutChart = new Chart(ctx, {
+        type: "doughnut",
+        data: data,
+
     });
 
 </script>

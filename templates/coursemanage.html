@@ -44,7 +44,7 @@
         <nav class="navbar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark">
             <ul class="nav nav-pills flex-column  mb-auto">
                 <div class="align-items-center  d-flex flex-column ">
-                    <i class="fc-icon-ustc fc-icon-zhongda"></i>
+                    <i class="fc-icon-ustc fc-icon-zhongda" style="margin-bottom: 6px"></i>
                     <span class="fs-4">学生管理系统</span>
                 </div>
                 <hr>
@@ -79,6 +79,11 @@
                     </a>
                 </li>
             </ul>
+            <div class="dropdown">
+                <hr>
+                <div><strong>当前用户: {{ usernow }}</strong></div>
+                <a href="/">退出登录</a>
+            </div>
         </nav>
     </div>
     <div class="" style="width: 85%">
@@ -115,10 +120,12 @@
                     <div class="" style="margin-left: 5px;">
                         <button type="submit" class="btn btn-primary">查询</button>
                     </div>
-                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
-                            data-bs-target="#insertModal" style="width: fit-content; margin-left: 40px ">
-                        新建
-                    </button>
+                    {% if root %}
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
+                                data-bs-target="#insertModal" style="width: fit-content; margin-left: 40px ">
+                            新建
+                        </button>
+                    {% endif %}
                 </form>
 
             </div>
@@ -131,7 +138,7 @@
         </div>
     </div>
 </div>
-<div class="modal" id="deleteModal">
+<div class="modal fade" id="deleteModal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -144,6 +151,28 @@
             <div class="modal-footer">
                 <div class="d-flex justify-content-end">
                     <button type="submit" id="deleteBtn" class="btn btn-primary">删除</button>
+                    <button type="button" class="btn btn-danger" style="margin-left: 5px" data-bs-dismiss="modal">
+                        关闭
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" id="addModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">选课</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h2>确认选课？</h2>
+            </div>
+            <div class="modal-footer">
+                <div class="d-flex justify-content-end">
+                    <button type="submit" id="addBtn" class="btn btn-primary">确定</button>
                     <button type="button" class="btn btn-danger" style="margin-left: 5px" data-bs-dismiss="modal">
                         关闭
                     </button>
@@ -240,16 +269,19 @@
                         <div class="input-group" style="width:100%; margin-bottom: 5px">
                             <span class="input-group-text">{{ headername[column] }}</span>
                             {% if type[0] %} <!-- 整数 -->
-                                <input type="number" class="form-control" id="{{ column }}Insert" title="请输入整数"
+                                <input type="number" required class="form-control" id="{{ column }}Insert"
+                                       title="请输入整数"
                                        name={{ column }}>
                             {% elif type[1] %} <!-- 浮点数 -->
-                                <input type="text" pattern="\d+(\.\d+)?" class="form-control"
+                                <input type="text" required pattern="\d+(\.\d+)?" class="form-control"
                                        title="请输入浮点数或整数"
                                        id="{{ column }}Insert" name={{ column }}>
                             {% elif type[2] %} <!-- 日期 -->
-                                <input type="date" class="form-control" id="{{ column }}Insert" name={{ column }}>
+                                <input type="date" required class="form-control" id="{{ column }}Insert"
+                                       name={{ column }}>
                             {% else %} <!-- 字符串 -->
-                                <input type="text" class="form-control" id="{{ column }}Insert" name={{ column }}>
+                                <input type="text" required class="form-control" id="{{ column }}Insert"
+                                       name={{ column }}>
                             {% endif %}
                         </div>
 
@@ -283,16 +315,19 @@
                         <div class="input-group" style="width:100%; margin-bottom: 5px">
                             <span class="input-group-text">{{ headername[column] }}</span>
                             {% if type[0] %} <!-- 整数 -->
-                                <input type="number" class="form-control" id="{{ column }}Edit" title="请输入整数"
+                                <input type="number" required class="form-control" id="{{ column }}Edit"
+                                       title="请输入整数"
                                        name={{ column }}>
                             {% elif type[1] %} <!-- 浮点数 -->
-                                <input type="text" pattern="\d+(\.\d+)?" class="form-control"
+                                <input type="text" required pattern="\d+(\.\d+)?" class="form-control"
                                        title="请输入浮点数或整数"
                                        id="{{ column }}Edit" name={{ column }}>
                             {% elif type[2] %} <!-- 日期 -->
-                                <input type="date" class="form-control" id="{{ column }}Edit" name={{ column }}>
+                                <input type="date" required class="form-control" id="{{ column }}Edit"
+                                       name={{ column }}>
                             {% else %} <!-- 字符串 -->
-                                <input type="text" class="form-control" id="{{ column }}Edit" name={{ column }}>
+                                <input type="text" required class="form-control" id="{{ column }}Edit"
+                                       name={{ column }}>
                             {% endif %}
                         </div>
 
@@ -488,6 +523,48 @@
                 .then(function (data) {
                         console.log(data);
                         ready_delete = false;
+                        if (data) {
+                            alert(data);
+                        }
+
+                    }
+                )
+                .catch(function (error) {
+                    console.log(error);
+                });
+
+        }
+    });
+</script>
+<script>
+    let row_id_to_add = null;
+    let ready_add = false;
+
+    function add_one(btn) {
+        var id = btn.id; // 获取当前按钮的id
+        console.log(id);
+        row_id_to_add = id.slice(0, -3); // 去掉末尾的 Edit，得到行的id
+        // 在这里根据 row_id 获取当前行的信息，并将信息填入到模态框中
+        ready_add = true;
+    }
+
+    const addBtn = document.getElementById('addBtn');
+    addBtn.addEventListener('click', ev => {
+        console.log(row_id_to_add);
+        if (ready_add) {
+            fetch('/add-course', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({course_id: row_id_to_add}) // 将 row_id 作为请求体发送到后端
+            })
+                .then(function (response) {
+                    return response.text();
+                })
+                .then(function (data) {
+                        console.log(data);
+                        ready_add = false;
                         if (data) {
                             alert(data);
                         }

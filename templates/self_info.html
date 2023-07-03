@@ -1,10 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <title>学生信息</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/fcicon.css">
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js' ) }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.bootstrap.esm.min.js' ) }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.bootstrap.min.js' ) }}"></script>
+    <script src="/static/js/jquery-3.7.0.min.js"></script>
+    <style>
+        .nav-pills .nav-link {
+            margin-bottom: 5px; /* 元素之间的水平间距 */
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #007bff;
+        }
+
+        .nav-pills .nav-link:not(.active):hover {
+            background-color: #6d7277;
+            color: #ffffff; /* 更改字体颜色为黑色 */
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: inherit;
+            height: 100%;
+        }
+
+    </style>
 </head>
 <body>
-$END$
+<div class="row">
+    <div class="" style="width: 15%">
+        <nav class="navbar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark">
+            <ul class="nav nav-pills flex-column  mb-auto">
+                <div class="align-items-center  d-flex flex-column ">
+                    <i class="fc-icon-ustc fc-icon-zhongda" style="margin-bottom: 6px"></i>
+                    <span class="fs-4">学生管理系统</span>
+                </div>
+                <hr>
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" aria-current="page">
+                        学生信息
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/major" class="nav-link " aria-current="page">
+                        专业信息
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/majorchange" class="nav-link " aria-current="page">
+                        专业变更信息
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/coursemanage" class="nav-link" aria-current="page">
+                        开课信息
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/coursegrades" class="nav-link " aria-current="page">
+                        选课与成绩信息
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/awards" class="nav-link" aria-current="page">
+                        学生奖惩信息
+                    </a>
+                </li>
+            </ul>
+            <div class="dropdown">
+                <hr>
+                <div><strong>当前用户: {{ usernow }}</strong></div>
+                <a href="/">退出登录</a>
+            </div>
+        </nav>
+    </div>
+    <div class="" style="width: 85%">
+        <div class="container " style="width: 50%; margin-top: 7%">
+            {% for column, type,info in zip(header,colType,data) %}
+                <div class="input-group" style="width:100%; margin-bottom: 5px">
+                    <span class="input-group-text">{{ headername[column] }}</span>
+                    <input type="text" readonly class="form-control" id="{{ column }}Show" value={{ info }}
+                            name={{ column }}>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 </body>
 </html>
